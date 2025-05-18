@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareNear - Hospital Recommendation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add your Google Maps API key here -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_ACTUAL_API_KEY&callback=initMap" async defer></script>
+    <style>
+        body {
+            background-image: url(images/image.png);
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto text-center py-12">
+        <h1 class="text-4xl font-bold text-blue-400">🏥 CareNear - Hospital Recommendation</h1>
+        <p class="mt-2 text-lg text-gray-300">Find the best hospitals based on your medical condition.</p>
+
+        <!-- Search Section -->
+        <div class="mt-8 bg-gray-800 p-6 rounded-lg shadow-lg w-11/12 md:w-2/3 lg:w-1/2 mx-auto">
+            <h2 class="text-2xl font-semibold text-white">Enter a Disease or Condition</h2>
+            <input id="conditionInput" type="text" class="w-full p-3 mt-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-blue-500" placeholder="e.g., heart attack, stroke, diabetes...">
+            <button onclick="recommendHospitals()" class="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-500 transition-all text-white font-semibold rounded-lg shadow-lg">Find Hospitals</button>
+            <button onclick="clearSearch()" class="mt-4 px-6 py-3 bg-red-600 hover:bg-red-500 transition-all text-white font-semibold rounded-lg shadow-lg ml-2">Clear</button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="mt-6"></div>
+
+        <!-- Map Section -->
+        <div id="map-container" class="mt-6 w-full md:w-2/3 lg:w-1/2 mx-auto hidden">
+            <div id="map" style="height: 400px; width: 100%;" class="rounded-lg shadow-lg"></div>
+        </div>
+    </div>
+
+    <script>
+        const hospitalDatabase = {
+            "heart attack": [
+                { 
+                    name: "Apollo Hospital", 
+                    type: "Cardiac Care", 
+                    facilities: ["ICU", "Angioplasty", "ECG"], 
+                    fees: "₹2,50,000 - ₹8,00,000", 
+                    location: "Apollo Hospital, Delhi", 
+                    lat: 28.5672, 
+                    lng: 77.2100, 
+                    emergencyContact: "011-12345678", 
+                    rating: 4.5,
+                    image: "https://via.placeholder.com/400x200?text=Apollo+Hospital",
+                    reviews: [
+                        { user: "Rahul Sharma", comment: "Excellent service and care. Highly recommended!", rating: 5 },
+                        { user: "Priya Singh", comment: "The staff was very supportive during my father's treatment.", rating: 4 }
+                    ]
+                },
+                { 
+                    name: "AIIMS", 
+                    type: "Cardiology", 
+                    facilities: ["Heart Surgery", "Cardiac Rehab"], 
+                    fees: "₹2,00,000 - ₹7,50,000", 
+                    location: "AIIMS, Delhi", 
+                    lat: 28.5676, 
+                    lng: 77.2107, 
+                    emergencyContact: "011-23456789", 
+                    rating: 4.7,
+                    image: "https://via.placeholder.com/400x200?text=AIIMS",
+                    reviews: [
+                        { user: "Ankit Verma", comment: "Best hospital for cardiac care in India.", rating: 5 },
+                        { user: "Sneha Gupta", comment: "Affordable and top-notch facilities.", rating: 4.5 }
+                    ]
+                }
+            ],
+            "stroke": [
+                { 
+                    name: "AIIMS Neurology", 
+                    type: "Neurology", 
+                    facilities: ["Brain MRI", "ICU", "Stroke Rehab"], 
+                    fees: "₹1,50,000 - ₹6,00,000", 
+                    location: "AIIMS, Delhi", 
+                    lat: 28.5676, 
+                    lng: 77.2107, 
+                    emergencyContact: "011-23456789", 
+                    rating: 4.6,
+                    image: "https://via.placeholder.com/400x200?text=AIIMS+Neurology",
+                    reviews: [
+                        { user: "Vikram Singh", comment: "Great neurology department with experienced doctors.", rating: 4.8 },
+                        { user: "Neha Kapoor", comment: "Timely treatment and excellent care.", rating: 4.5 }
+                    ]
+                },
+                { 
+                    name: "Fortis Neurology", 
+                    type: "Neurosciences", 
+                    facilities: ["Stroke Rehab", "Neurosurgery"], 
+                    fees: "₹2,00,000 - ₹8,00,000", 
+                    location: "Fortis Hospital, Chennai", 
+                    lat: 13.0827, 
+                    lng: 80.2707, 
+                    emergencyContact: "044-12345678", 
+                    rating: 4.4,
+                    image: "https://via.placeholder.com/400x200?text=Fortis+Neurology",
+                    reviews: [
+                        { user: "Rajesh Kumar", comment: "Good facilities but a bit expensive.", rating: 4 },
+                        { user: "Anjali Mehta", comment: "Professional staff and clean environment.", rating: 4.2 }
+                    ]
+                }
+            ]
+        };
+
+        let map;
+        let userMarker;
+        let directionsService;
+        let directionsRenderer;
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 28.6139, lng: 77.2090 }, // Default center (Delhi)
+                zoom: 12,
+            });
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+        }
+
+        function recommendHospitals() {
+            let query = document.getElementById("conditionInput").value.trim().toLowerCase();
+            let resultContainer = document.getElementById("results");
+            let mapContainer = document.getElementById("map-container");
+
+            if (!query) {
+                resultContainer.innerHTML = `<p class="text-red-400 mt-3">⚠ Please enter a valid condition.</p>`;
+                return;
+            }
+
+            // Show loading spinner
+            resultContainer.innerHTML = `<div class="text-center mt-4"><div class="spinner"></div> <p class="text-gray-300">Finding hospitals...</p></div>`;
+
+            // Handle partial matches
+            let matchedCondition = Object.keys(hospitalDatabase).find(key => key.includes(query));
+            if (!matchedCondition) {
+                resultContainer.innerHTML = `<p class="text-red-400 mt-3">❌ No recommendations available for this condition.</p>`;
+                mapContainer.classList.add("hidden");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    let userLat = position.coords.latitude;
+                    let userLng = position.coords.longitude;
+
+                    // Show user's location on the map
+                    if (userMarker) userMarker.setMap(null);
+                    userMarker = new google.maps.Marker({
+                        position: { lat: userLat, lng: userLng },
+                        map: map,
+                        title: "Your Location",
+                        icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                    });
+
+                    let hospitals = hospitalDatabase[matchedCondition];
+
+                    // Sort hospitals by distance
+                    hospitals.sort((a, b) => {
+                        let distanceA = getDistance(userLat, userLng, a.lat, a.lng);
+                        let distanceB = getDistance(userLat, userLng, b.lat, b.lng);
+                        return distanceA - distanceB;
+                    });
+
+                    // Display hospitals
+                    let hospitalList = hospitals.map(hospital => {
+                        let distance = getDistance(userLat, userLng, hospital.lat, hospital.lng).toFixed(2);
+                        let reviews = hospital.reviews.map(review => `
+                            <div class="bg-gray-700 p-3 rounded-lg mt-2">
+                                <p class="text-gray-300"><strong>${review.user}</strong> (⭐ ${review.rating})</p>
+                                <p class="text-gray-400">${review.comment}</p>
+                            </div>
+                        `).join("");
+
+                        return `
+                            <div class="bg-gray-800 p-5 rounded-lg shadow-lg mt-4 w-11/12 md:w-2/3 lg:w-1/2 mx-auto transition hover:bg-gray-700">
+                                <img src="${hospital.image}" alt="${hospital.name}" class="w-full h-48 object-cover rounded-lg">
+                                <h3 class="text-xl font-bold text-blue-400 mt-3">🏥 ${hospital.name}</h3>
+                                <p class="text-gray-300"><strong>Type:</strong> ${hospital.type}</p>
+                                <p class="text-gray-300"><strong>Facilities:</strong> ${hospital.facilities.join(", ")}</p>
+                                <p class="text-green-400 font-semibold"><strong>💰 Fees:</strong> ${hospital.fees}</p>
+                                <p class="text-yellow-400 font-semibold"><strong>⭐ Rating:</strong> ${hospital.rating}</p>
+                                <p class="text-yellow-400 font-semibold"><strong>📍 Distance:</strong> ${distance} km away</p>
+                                <p class="text-red-400 font-semibold"><strong>🚨 Emergency Contact:</strong> ${hospital.emergencyContact || "Not available"}</p>
+                                <p class="text-gray-400"><strong>📍 Location:</strong> ${hospital.location}</p>
+                                <div class="mt-4">
+                                    <h4 class="text-lg font-bold text-blue-400">User Reviews</h4>
+                                    ${reviews}
+                                </div>
+                                <button onclick="showDirections(${hospital.lat}, ${hospital.lng})" class="mt-3 px-4 py-2 bg-green-600 hover:bg-green-500 transition-all text-white font-semibold rounded-lg shadow-lg">Get Directions</button>
+                            </div>
+                        `;
+                    }).join("");
+
+                    resultContainer.innerHTML = hospitalList;
+                    mapContainer.classList.remove("hidden");
+                },
+                () => {
+                    resultContainer.innerHTML = `<p class="text-red-400 mt-3">⚠ Location access denied. Unable to calculate distance.</p>`;
+                }
+            );
+        }
+
+        function showDirections(lat, lng) {
+            navigator.geolocation.getCurrentPosition(position => {
+                let userLat = position.coords.latitude;
+                let userLng = position.coords.longitude;
+
+                directionsService.route(
+                    {
+                        origin: { lat: userLat, lng: userLng },
+                        destination: { lat: lat, lng: lng },
+                        travelMode: google.maps.TravelMode.DRIVING,
+                    },
+                    (response, status) => {
+                        if (status === "OK") {
+                            directionsRenderer.setDirections(response);
+                        } else {
+                            alert("Directions request failed due to " + status);
+                        }
+                    }
+                );
+            });
+        }
+
+        function getDistance(lat1, lon1, lat2, lon2) {
+            let R = 6371; // Radius of Earth in km
+            let dLat = (lat2 - lat1) * (Math.PI / 180);
+            let dLon = (lon2 - lon1) * (Math.PI / 180);
+            let a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // Distance in km
+        }
+
+        function clearSearch() {
+            document.getElementById("conditionInput").value = "";
+            document.getElementById("results").innerHTML = "";
+            document.getElementById("map-container").classList.add("hidden");
+            if (directionsRenderer) directionsRenderer.setMap(null);
+        }
+    </script>
+</body>
+</html>

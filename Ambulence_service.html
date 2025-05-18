@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambulance Service</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Ambulance Service</h1>
+    </header>
+    <main>
+        <section id="request-form">
+            <h2>Request an Ambulance</h2>
+            <form id="ambulance-request">
+                <input type="text" id="name" placeholder="Your Name" required>
+                <input type="tel" id="phone" placeholder="Phone Number" required>
+                <input type="text" id="location" placeholder="Location" required>
+                <button type="submit">Request Ambulance</button>
+            </form>
+        </section>
+        <section id="tracking">
+            <h2>Real-Time Tracking</h2>
+            <div id="map"></div>
+        </section>
+        <section id="chat">
+            <h2>Chat Service</h2>
+            <div id="chat-box"></div>
+            <input type="text" id="chat-input" placeholder="Type a message...">
+            <button id="send-chat">Send</button>
+        </section>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Care Near provides accessible healthcare services with AI-powered tools, real-time hospital data, and telemedicine.">
+    <meta name="keywords" content="Healthcare, AI, Hospitals, Telemedicine, Emergency Services">
+    <title>Care Near</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8f9fa;
+            text-align: center;
+            scroll-behavior: smooth;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: #333;
+            color: #fff;
+        }
+
+        body.dark-mode header {
+            background: #222;
+        }
+
+        body.dark-mode .service-card {
+            background: #444;
+            color: #fff;
+        }
+
+        body.dark-mode .service-card p {
+            color: #ddd;
+        }
+
+        body.dark-mode .testimonial-card {
+            background: #444;
+            color: #fff;
+        }
+
+        body.dark-mode .footer {
+            background: #222;
+        }
+
+        /* Header and Navbar */
+        header {
+            background: rgba(0, 123, 255, 0.9);
+            color: white;
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s;
+        }
+
+        header img {
+            width: 50px; /* Smaller logo */
+            height: auto;
+            margin-left: 10px;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        nav ul li {
+            margin: 0 10px;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 8px 12px;
+            transition: color 0.3s, background 0.3s;
+            border-radius: 5px;
+        }
+
+        nav ul li a:hover {
+            color: #ffdd57;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: url('https://domesticpreparedness.com/wp-content/uploads/2023/10/MicrosoftTeams-image-88-2048x1399.webp') no-repeat center center/cover;
+            color: white;
+            padding: 150px 20px;
+            position: relative;
+            height: calc(100vh - 80px);
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .hero h1, .hero p, .hero button {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s, transform 0.3s;
+            animation: pulse 2s infinite;
+        }
+
+        .btn:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2rem;
+            color: white;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+
+        /* Sections */
+        .section {
+            padding: 80px 20px;
+        }
+
+        .section h2 {
+            color: #007bff;
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+
+        .services-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .service-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 250px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .service-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .service-card i {
+            font-size: 2rem;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .service-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .service-card p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Testimonials Section */
+        .testimonials-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .testimonial-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* FAQ Section */
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            margin-bottom: 20px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .faq-item h3 {
+            font-size: 1.1rem;
+            color: #007bff;
+            cursor: pointer;
+        }
+
+        /* Footer */
+        .footer {
+            background: #333;
+            color: white;
+            padding: 15px;
+            width: 100%;
+            margin-top: 40px;
+        }
+
+        /* Back to Top Button */
+        #back-to-top {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        /* Dark Mode Toggle Button */
+        #theme-toggle {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            header img {
+                width: 40px; /* Even smaller logo for mobile */
+            }
+
+            nav ul li a {
+                padding: 6px 10px;
+                font-size: 0.9rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="images/DALL·E 2025-02-17 19.56.10 - A modern and unique logo for 'Care Near'. The logo should incorporate a medical cross and a location pin in a creative way, symbolizing accessible hea.webp" alt="Care Near Logo">
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero" id="home">
+        <h1>Providing Quality Healthcare Services</h1>
+        <p>Your health is our priority</p>
+        <button class="btn" onclick="window.location.href='signup.html'">Get Started</button>
+        <div class="scroll-indicator">&#9660;</div>
+    </section>
+
+    <section class="section" id="services">
+        <h2>Our Services</h2>
+        <div class="services-container">
+            <div class="service-card">
+                <i class="fas fa-stethoscope"></i>
+                <h3>AI-Powered Symptom Checker</h3>
+                <p>Get instant AI-driven insights into your symptoms.</p>
+            </div>
+            <div class="service-card" onclick="navigateToSearch()">
+                <i class="fas fa-hospital"></i>
+                <h3>Nearby Hospital Locator</h3>
+                <p>Find the nearest hospitals with real-time data.</p>
+            </div>           
+            <div class="service-card" onclick="navigateToInsurance()">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <h3>Insurance Compatibility Checks</h3>
+                <p>Check if your insurance is accepted.</p>
+            </div>
+            <div class="service-card" onclick="navigateToAmbulance()">
+                <i class="fas fa-ambulance"></i>
+                <h3>Ambulance Service Integration</h3>
+                <p>Quick access to ambulance services.</p>
+            </div>
+            <div class="service-card">
+                <i class="fas fa-user-md"></i>
+                <h3>Real-Time Doctor & Hospital Insights</h3>
+                <p>Get real-time updates on doctors and hospitals.</p>
+            </div>
+            <div class="service-card">
+                <i class="fas fa-video"></i>
+                <h3>Telemedicine & Wearable Integration</h3>
+                <p>Consult doctors online and sync wearable data.</p>
+            </div>
+            <div class="service-card" onclick="navigateToEmergency()">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Emergency Mode & SOS Button</h3>
+                <p>Instant help during emergencies.</p>
+            </div>
+            <div class="service-card">
+                <i class="fas fa-calculator"></i>
+                <h3>Cost Estimation for Treatments</h3>
+                <p>Estimate treatment costs upfront.</p>
+            </div>
+            <div class="service-card" onclick="navigateToDisease()">
+                <i class="fas fa-search"></i>
+                <h3>Disease-Based Hospital Search</h3>
+                <p>Find hospitals based on your specific disease.</p>
+            </div>
+            <div class="service-card" onclick="navigateToAccident()">
+                <i class="fas fa-car-crash"></i>
+                <h3>Accident-Based Hospital Recommendation</h3>
+                <p>Locate the best hospitals for accident emergencies.</p>
+            </div>
+        </div>
+        </section>
+
+        <script>
+            function navigateToSearch() {
+                window.location.href = "hospital_search.html"; // Navigate to hospital search page
+            }
+            function navigateToEmergency() {
+                window.location.href = "emergency.html"; 
+            }
+            function navigateToInsurance() {
+                window.location.href = "insurance.html";
+            }
+            function navigateToAccident() {
+                window.location.href = "accident.html";
+            }
+            function navigateToDisease() {
+                window.location.href = "disease.html";
+            }
+            function navigateToAmbulance() {
+                window.location.href = "ambulence.html";
+            }
+        </script>
+        
+        
+    </section>
+
+    <section class="section" id="about">
+        <h2>About Us</h2>
+        <p>Care Near is revolutionizing healthcare accessibility with AI-driven recommendations, real-time hospital data, and telemedicine services.</p>
+    </section>
+
+    <section class="section" id="testimonials">
+        <h2>What Our Users Say</h2>
+        <div class="testimonials-container">
+            <div class="testimonial-card">
+                <p>"Care Near saved me during an emergency. Highly recommended!"</p>
+                <p>- John Doe</p>
+            </div>
+            <div class="testimonial-card">
+                <p>"The AI symptom checker is incredibly accurate."</p>
+                <p>- Jane Smith</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="faq">
+        <h2>FAQs</h2>
+        <div class="faq-container">
+            <div class="faq-item">
+                <h3>What is Care Near?</h3>
+                <p>Care Near is a healthcare platform that provides AI-driven symptom checks, hospital locators, and telemedicine services.</p>
+            </div>
+            <div class="faq-item">
+                <h3>How do I use the AI-powered symptom checker?</h3>
+                <p>Simply enter your symptoms, and the AI will analyze and provide insights on possible conditions and treatment options.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="contact">
+        <h2>Contact Us</h2>
+        <p>If you have any questions or need assistance, feel free to reach out!</p>
+        <p><strong>Phone:</strong> +1 234 567 890</p>
+        <p><strong>Email:</strong> contact@carenear.com</p>
+    </section>
+
+    <div class="footer">
+        <p>&copy; 2025 Care Near. All rights reserved.</p>
+    </div>
+
+    <button id="back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">&#8593;</button>
+    <button id="theme-toggle" onclick="toggleDarkMode()">🌙</button>
+
+    <script>
+        // Dark Mode Toggle Function
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+    </script>
+</body>
+</html>

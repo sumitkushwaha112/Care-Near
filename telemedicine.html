@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telemedicine & Wearable Integration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: url(images/image.png);
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #ffcc00;
+            font-size: 36px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #ffcc00;
+            font-size: 24px;
+            font-weight: 550;
+            margin-bottom: 15px;
+        }
+
+        p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* Sections */
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            background: #ffcc00;
+            color: #1a1a1a;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #e6b800;
+            transform: translateY(-2px);
+        }
+
+        /* Telemedicine Section */
+        #telemedicine {
+            text-align: center;
+        }
+
+        #telemedicine .btn {
+            margin-top: 20px;
+        }
+
+        /* Wearable Integration Section */
+        #wearable {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #wearable input[type="file"] {
+            display: none;
+        }
+
+        #wearable .upload-btn {
+            background: #ff4444;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        #wearable .upload-btn:hover {
+            background: #cc0000;
+        }
+
+        /* Dashboard Section */
+        #dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .card h3 {
+            color: #ffcc00;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+
+        footer p {
+            margin: 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Telemedicine & Wearable Integration</h1>
+
+        <!-- Telemedicine Section -->
+        <div id="telemedicine" class="section">
+            <h2>Consult Doctors Online</h2>
+            <p>Connect with certified doctors via video calls and get medical advice from the comfort of your home.</p>
+            <button class="btn" onclick="startConsultation()">Start Consultation</button>
+        </div>
+
+        <!-- Wearable Integration Section -->
+        <div id="wearable" class="section">
+            <h2>Sync Wearable Data</h2>
+            <p>Upload your health data from wearable devices to get personalized insights and recommendations.</p>
+            <label for="wearable-file" class="upload-btn">Upload Wearable Data</label>
+            <input type="file" id="wearable-file" accept=".csv, .json" onchange="handleFileUpload(event)">
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section">
+            <h2>Health Dashboard</h2>
+            <div class="card">
+                <h3>Heart Rate</h3>
+                <p id="heart-rate">-- bpm</p>
+            </div>
+            <div class="card">
+                <h3>Steps</h3>
+                <p id="steps">-- steps</p>
+            </div>
+            <div class="card">
+                <h3>Sleep</h3>
+                <p id="sleep">-- hours</p>
+            </div>
+            <div class="card">
+                <h3>Calories</h3>
+                <p id="calories">-- kcal</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2023 Telemedicine & Wearable Integration. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Telemedicine Functionality
+        function startConsultation() {
+            alert("🚀 Starting consultation... Please wait while we connect you to a doctor.");
+        }
+
+        // Wearable Data Upload Functionality
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                alert(`📁 File "${file.name}" uploaded successfully!`);
+                // Simulate data processing
+                setTimeout(() => {
+                    document.getElementById("heart-rate").innerText = "72 bpm";
+                    document.getElementById("steps").innerText = "5,432 steps";
+                    document.getElementById("sleep").innerText = "7.5 hours";
+                    document.getElementById("calories").innerText = "1,200 kcal";
+                }, 2000);
+            }
+        }
+    </script>
+</body>
+</html>

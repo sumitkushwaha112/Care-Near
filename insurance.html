@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insurance Compatibility Check</title>
+    <style>
+        /* CSS for the page */
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url(images/image.png); /* Black background */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;  /* Full screen height */
+            color: #fff; /* White text color */
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            background-color: #333;  /* Dark gray background for form */
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label {
+            margin-bottom: 5px;
+            color: #00FF00;  /* Light green color */
+            font-size: 16px;
+        }
+
+        input, select {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 80%;
+            box-sizing: border-box;
+            background-color: #444;  /* Slightly lighter background for inputs */
+            color: #fff;
+        }
+
+        input:focus, select:focus {
+            border-color: #4CAF50;  /* Green border on focus */
+            outline: none;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 80%;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #hospitalRecommendations {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #555;  /* Dark gray background for hospital list */
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-spinner {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #map {
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Insurance Compatibility Check</h1>
+        
+        <!-- Form to collect user details -->
+        <form id="userForm">
+            <label for="insurancePolicy">Select Insurance Policy:</label>
+            <select id="insurancePolicy" name="insurancePolicy" required>
+                <option value="">-- Select Policy --</option>
+                <option value="Ayushman Card">Ayushman Card (Government Health Insurance)</option>
+                <option value="Max Bupa Health Insurance">Max Bupa Health Insurance</option>
+                <option value="Star Health Insurance">Star Health Insurance</option>
+                <option value="ICICI Lombard Health Insurance">ICICI Lombard Health Insurance</option>
+                <option value="Reliance Health Insurance">Reliance Health Insurance</option>
+                <option value="Aditya Birla Health Insurance">Aditya Birla Health Insurance</option>
+            </select>
+
+            <label for="location">Your Location:</label>
+            <input type="text" id="location" name="location" placeholder="Fetching your location..." readonly>
+            <button type="button" onclick="fetchUserLocation()">Fetch Live Location</button>
+            <small>Or enter your location manually:</small>
+            <input type="text" id="manualLocation" name="manualLocation" placeholder="Enter your city">
+
+            <button type="submit">Check Compatibility</button>
+            <button type="button" onclick="resetForm()">Reset</button>
+        </form>
+
+        <!-- Loading spinner -->
+        <div class="loading-spinner" id="loadingSpinner"></div>
+
+        <!-- Section for displaying hospital recommendations -->
+        <div id="hospitalRecommendations">
+            <h2>Compatible Hospitals:</h2>
+            <ul id="hospitalList"></ul>
+        </div>
+
+        <!-- Map to display hospital locations -->
+        <div id="map"></div>
+    </div>
+
+    <script>
+        // Function to fetch user's location using Geolocation API
+        function fetchUserLocation() {
+            const locationInput = document.getElementById('location');
+            locationInput.value = "Fetching your location...";
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        getCityName(latitude, longitude);
+                    },
+                    (error) => {
+                        console.error("Error fetching location:", error);
+                        locationInput.value = "Unable to fetch location. Please enter manually.";
+                    }
+                );
+            } else {
+                locationInput.value = "Geolocation is not supported by your browser. Please enter manually.";
+            }
+        }
+
+        // Function to get city name from latitude and longitude using Reverse Geocoding
+        function getCityName(latitude, longitude) {
+            const locationInput = document.getElementById('location');
+            const apiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const city = data.address.city || data.address.town || data.address.village || data.address.county;
+                    locationInput.value = city || "Location not found";
+                })
+                .catch(error => {
+                    console.error("Error fetching city name:", error);
+                    locationInput.value = "Unable to fetch city name. Please enter manually.";
+                });
+        }
+
+        // Function to fetch hospitals near the user's location
+        function fetchHospitals(location) {
+            const apiUrl = `https://nominatim.openstreetmap.org/search?city=${location}&format=json&q=hospital&limit=5`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("API Response:", data); // Debugging: Check API response
+                    displayHospitalDetails(data);
+                })
+                .catch(error => {
+                    console.error("Error fetching hospitals:", error);
+                    const hospitalList = document.getElementById('hospitalList');
+                    hospitalList.innerHTML = "<li>Error fetching hospital data. Please try again.</li>";
+                });
+        }
+
+        // Function to display hospital details
+        function displayHospitalDetails(hospitals) {
+            const hospitalList = document.getElementById('hospitalList');
+            hospitalList.innerHTML = ''; // Clear previous results
+
+            if (hospitals.length > 0) {
+                hospitals.forEach(hospital => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <strong>${hospital.display_name}</strong><br>
+                        <em>Address:</em> ${hospital.display_name}
+                    `;
+                    hospitalList.appendChild(listItem);
+                });
+                // Display map with hospital locations
+                displayMap(hospitals);
+            } else {
+                const listItem = document.createElement('li');
+                listItem.textContent = "No hospitals found in this location.";
+                hospitalList.appendChild(listItem);
+            }
+        }
+
+        // Function to display map with hospital locations
+        function displayMap(hospitals) {
+            const mapElement = document.getElementById('map');
+            mapElement.style.display = 'block';
+
+            // Initialize OpenStreetMap
+            const map = L.map('map').setView([hospitals[0].lat, hospitals[0].lon], 10); // Centered on the first hospital
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Add markers for hospitals
+            hospitals.forEach(hospital => {
+                L.marker([hospital.lat, hospital.lon])
+                    .addTo(map)
+                    .bindPopup(`<strong>${hospital.display_name}</strong>`);
+            });
+        }
+
+        // Function to reset the form and clear results
+        function resetForm() {
+            document.getElementById('userForm').reset();
+            document.getElementById('hospitalList').innerHTML = '';
+            document.getElementById('map').style.display = 'none';
+            document.getElementById('loadingSpinner').style.display = 'none';
+            fetchUserLocation(); // Fetch location again on reset
+        }
+
+        // Handle form submission
+        document.getElementById('userForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent form submission and page reload
+
+            // Show loading spinner
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('hospitalList').innerHTML = '';
+            document.getElementById('map').style.display = 'none';
+
+            // Get user input values
+            const insurancePolicy = document.getElementById('insurancePolicy').value;
+            const location = document.getElementById('location').value || document.getElementById('manualLocation').value;
+
+            // Fetch hospitals near the user's location
+            fetchHospitals(location);
+        });
+    </script>
+    <!-- Include LeafletJS for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</body>
+</html>

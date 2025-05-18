@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambulance Service</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_VALID_API_KEY&callback=initMap&libraries=places" async defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url(images/image.png);
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        h1 {
+            color: #ffcc00;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        input {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        input:focus {
+            outline: none;
+            border-color: #ffcc00;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        button {
+            background: #ffcc00;
+            color: #1a1a1a;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #e6b800;
+            transform: translateY(-2px);
+        }
+        #map {
+            height: 250px;
+            width: 100%;
+            margin-top: 20px;
+            border-radius: 10px;
+            border: 2px solid #ffcc00;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 500;
+            text-align: center;
+            color: #ffcc00;
+        }
+        #ambulance-list {
+            margin-top: 20px;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        #ambulance-list h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            font-weight: 500;
+            color: #ffcc00;
+        }
+        #ambulance-list p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚑 Emergency Ambulance Service</h1>
+        <input type="text" id="name" placeholder="Your Name">
+        <input type="text" id="phone" placeholder="Your Phone Number">
+        <input type="text" id="disease" placeholder="Describe Your Problem">
+        <input type="text" id="location" placeholder="Enter Your Location">
+        <button onclick="getCurrentLocation()">📍 Use My Location</button>
+        <button onclick="requestAmbulance()">Request Ambulance</button>
+        <div id="map"></div>
+        <h3 id="status">Status: Waiting for ambulance...</h3>
+        <div id="ambulance-list"></div>
+    </div>
+
+    <script>
+        let map, ambulanceMarker;
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: { lat: 28.6139, lng: 77.2090 },
+            });
+        }
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    document.getElementById("location").value = `${lat}, ${lng}`;
+                    map.setCenter({ lat, lng });
+                }, () => alert("⚠️ Unable to fetch location!"));
+            } else {
+                alert("⚠️ Geolocation is not supported by this browser.");
+            }
+        }
+        function requestAmbulance() {
+            let name = document.getElementById("name").value;
+            let phone = document.getElementById("phone").value;
+            let disease = document.getElementById("disease").value;
+            let location = document.getElementById("location").value;
+            if (name && phone && disease && location) {
+                alert(`🚨 Request Sent!\nName: ${name}\nPhone: ${phone}\nIssue: ${disease}`);
+                document.getElementById("status").innerText = "🚑 Ambulance is on the way!";
+                updateMap(location);
+                fetchNearbyAmbulances(location);
+            } else {
+                alert("⚠️ Please fill all fields!");
+            }
+        }
+        function updateMap(location) {
+            let geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ 'address': location }, function(results, status) {
+                if (status === 'OK') {
+                    map.setCenter(results[0].geometry.location);
+                    if (ambulanceMarker) ambulanceMarker.setMap(null);
+                    ambulanceMarker = new google.maps.Marker({
+                        position: results[0].geometry.location,
+                        map: map,
+                        title: "🚑 Ambulance Location",
+                        animation: google.maps.Animation.BOUNCE
+                    });
+                } else {
+                    alert("Error: Unable to locate the address.");
+                }
+            });
+        }
+        function fetchNearbyAmbulances(location) {
+            let ambulanceList = document.getElementById("ambulance-list");
+            ambulanceList.innerHTML = "<h3>Nearby Ambulance Services</h3>";
+            let dummyData = [
+                { name: "FastAid Ambulance", distance: "2 km", eta: "5 min" },
+                { name: "City Emergency Ambulance", distance: "3.5 km", eta: "8 min" },
+                { name: "24/7 Rescue Team", distance: "5 km", eta: "12 min" }
+            ];
+            dummyData.forEach(ambulance => {
+                ambulanceList.innerHTML += `<p>🚑 ${ambulance.name} - ${ambulance.distance} away, ETA: ${ambulance.eta}</p>`;
+            });
+        }
+    </script>
+</body>
+</html>

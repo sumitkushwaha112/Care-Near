@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disease Identifier - CareNear</title>
+    <style>
+/* General Styles */
+body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: url(images/image.png);
+            color: #ffffff; /* White text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .wrapper {
+            border: 2px solid #3498db; /* Blue border around the entire content */
+            border-radius: 15px;
+            padding: 20px;
+            background: #1a1a1a; /* Dark background for the wrapper */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Shadow for the wrapper */
+        }
+
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background: #1a1a1a; /* Dark gray container */
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #080a0c; /* Blue heading */
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        h2 {
+            font-size: 1.7rem;
+            color: #0fe4e4; /* Gray subheading */
+            margin-bottom: 30px;
+            font-weight: 450;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 2px solid #171a1c; /* Blue border */
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            background: #2c3e50; /* Dark input background */
+            color: #ffffff; /* White text */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #262627; /* Darker blue on focus */
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.5); /* Glow effect */
+        }
+
+        input::placeholder {
+            color: #95a5a6; /* Light gray placeholder */
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #3498db; /* Blue button */
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background: #2980b9; /* Darker blue on hover */
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            font-size: 1rem;
+            background: #2c3e50; /* Dark background for results */
+            border-radius: 8px;
+            color: #ffffff; /* White text */
+            text-align: left;
+            animation: fadeIn 0.5s ease-in-out;
+            border: 2px solid #3498db; /* Blue border */
+        }
+
+        .results strong {
+            color: #3498db; /* Blue for strong text */
+        }
+
+        .results span {
+            color: #ffffff; /* White for regular text */
+        }
+
+        .immediate-action {
+            color: #e74c3c; /* Red for immediate action */
+            font-weight: 600;
+        }
+
+        .normal-care {
+            color: #27ae60; /* Green for normal care */
+            font-weight: 600;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1rem;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }    </style>
+</head>
+<body>
+
+    <div class="search-container">
+        <h1>CareNear</h1>
+        <h2>Disease Identifier & Severity Checker</h2>
+        <input type="text" id="diseaseInput" placeholder="Enter Disease Name...">
+        <button onclick="identifyDisease()">Check Disease Details</button>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        const diseaseData = {
+    "COVID-19": { category: "Infectious", symptoms: ["Fever", "Cough", "Shortness of breath"], severity: "Immediate Action Required" },
+    "Malaria": { category: "Infectious", symptoms: ["Fever", "Chills", "Headache"], severity: "Immediate Action Required" },
+    "Diabetes": { category: "Chronic", symptoms: ["Frequent urination", "Increased thirst", "Fatigue"], severity: "Normal Care Needed" },
+    "Hypertension": { category: "Chronic", symptoms: ["Headache", "Dizziness", "Blurred vision"], severity: "Normal Care Needed" },
+    "Stroke": { category: "Lifestyle-Related", symptoms: ["Face drooping", "Arm weakness", "Speech difficulty"], severity: "Immediate Action Required" },
+    "Heart Attack": { category: "Chronic", symptoms: ["Chest pain", "Shortness of breath", "Cold sweat"], severity: "Immediate Action Required" },
+    "Asthma": { category: "Chronic", symptoms: ["Wheezing", "Coughing", "Shortness of breath"], severity: "Normal Care Needed" },
+    "Dengue": { category: "Infectious", symptoms: ["High fever", "Severe headache", "Joint pain"], severity: "Immediate Action Required" },
+    "Liver Disease": { category: "Lifestyle-Related", symptoms: ["Jaundice", "Abdominal pain", "Fatigue"], severity: "Normal Care Needed" },
+    "Tuberculosis": { category: "Infectious", symptoms: ["Cough", "Fever", "Weight loss"], severity: "Immediate Action Required" },
+    "Cholera": { category: "Infectious", symptoms: ["Diarrhea", "Dehydration", "Vomiting"], severity: "Immediate Action Required" },
+    "Influenza": { category: "Infectious", symptoms: ["Fever", "Muscle aches", "Sore throat"], severity: "Normal Care Needed" },
+    "Pneumonia": { category: "Infectious", symptoms: ["Cough", "Fever", "Difficulty breathing"], severity: "Immediate Action Required" },
+    "Arthritis": { category: "Chronic", symptoms: ["Joint pain", "Stiffness", "Swelling"], severity: "Normal Care Needed" },
+    "Epilepsy": { category: "Neurological", symptoms: ["Seizures", "Loss of consciousness", "Confusion"], severity: "Immediate Action Required" },
+    "Migraine": { category: "Neurological", symptoms: ["Severe headache", "Nausea", "Sensitivity to light"], severity: "Normal Care Needed" },
+    "Osteoporosis": { category: "Chronic", symptoms: ["Bone pain", "Fractures", "Loss of height"], severity: "Normal Care Needed" },
+    "Psoriasis": { category: "Skin", symptoms: ["Red patches", "Itching", "Dry skin"], severity: "Normal Care Needed" },
+    "Alzheimer's": { category: "Neurological", symptoms: ["Memory loss", "Confusion", "Difficulty speaking"], severity: "Immediate Action Required" },
+    "Parkinson's": { category: "Neurological", symptoms: ["Tremors", "Stiffness", "Balance problems"], severity: "Immediate Action Required" },
+    "Bronchitis": { category: "Respiratory", symptoms: ["Cough", "Mucus production", "Fatigue"], severity: "Normal Care Needed" },
+    "Gastroenteritis": { category: "Infectious", symptoms: ["Diarrhea", "Nausea", "Abdominal pain"], severity: "Normal Care Needed" },
+    "Hepatitis A": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Hepatitis B": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Hepatitis C": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Lyme Disease": { category: "Infectious", symptoms: ["Rash", "Fever", "Joint pain"], severity: "Immediate Action Required" },
+    "Measles": { category: "Infectious", symptoms: ["Fever", "Cough", "Rash"], severity: "Immediate Action Required" },
+    "Mumps": { category: "Infectious", symptoms: ["Swollen salivary glands", "Fever", "Headache"], severity: "Normal Care Needed" },
+    "Rubella": { category: "Infectious", symptoms: ["Rash", "Fever", "Swollen lymph nodes"], severity: "Normal Care Needed" },
+    "Tetanus": { category: "Infectious", symptoms: ["Muscle stiffness", "Spasms", "Fever"], severity: "Immediate Action Required" },
+    "Whooping Cough": { category: "Infectious", symptoms: ["Severe cough", "Whooping sound", "Vomiting"], severity: "Immediate Action Required" },
+    "Yellow Fever": { category: "Infectious", symptoms: ["Fever", "Jaundice", "Bleeding"], severity: "Immediate Action Required" },
+    "Zika Virus": { category: "Infectious", symptoms: ["Fever", "Rash", "Joint pain"], severity: "Normal Care Needed" },
+    "Ebola": { category: "Infectious", symptoms: ["Fever", "Bleeding", "Weakness"], severity: "Immediate Action Required" },
+    "HIV/AIDS": { category: "Infectious", symptoms: ["Fever", "Weight loss", "Fatigue"], severity: "Immediate Action Required" },
+    "Syphilis": { category: "Infectious", symptoms: ["Sores", "Rash", "Fever"], severity: "Immediate Action Required" },
+    "Gonorrhea": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Chlamydia": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Herpes": { category: "Infectious", symptoms: ["Blisters", "Itching", "Pain"], severity: "Normal Care Needed" },
+    "Scabies": { category: "Skin", symptoms: ["Itching", "Rash", "Sores"], severity: "Normal Care Needed" },
+    "Ringworm": { category: "Skin", symptoms: ["Itchy ring-shaped rash", "Redness", "Scaling"], severity: "Normal Care Needed" },
+    "Athlete's Foot": { category: "Skin", symptoms: ["Itching", "Burning", "Cracking skin"], severity: "Normal Care Needed" },
+    "Eczema": { category: "Skin", symptoms: ["Itching", "Redness", "Dry skin"], severity: "Normal Care Needed" },
+    "Acne": { category: "Skin", symptoms: ["Pimples", "Blackheads", "Redness"], severity: "Normal Care Needed" },
+    "Rosacea": { category: "Skin", symptoms: ["Facial redness", "Swelling", "Bumps"], severity: "Normal Care Needed" },
+    "Celiac Disease": { category: "Autoimmune", symptoms: ["Diarrhea", "Bloating", "Weight loss"], severity: "Normal Care Needed" },
+    "Lupus": { category: "Autoimmune", symptoms: ["Fatigue", "Joint pain", "Rash"], severity: "Immediate Action Required" },
+    "Rheumatoid Arthritis": { category: "Autoimmune", symptoms: ["Joint pain", "Swelling", "Stiffness"], severity: "Normal Care Needed" },
+    "Multiple Sclerosis": { category: "Neurological", symptoms: ["Numbness", "Weakness", "Vision problems"], severity: "Immediate Action Required" },
+    "Fibromyalgia": { category: "Chronic", symptoms: ["Widespread pain", "Fatigue", "Sleep problems"], severity: "Normal Care Needed" },
+    "Chronic Fatigue Syndrome": { category: "Chronic", symptoms: ["Extreme fatigue", "Sleep problems", "Memory issues"], severity: "Normal Care Needed" },
+    "Irritable Bowel Syndrome": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Diarrhea"], severity: "Normal Care Needed" },
+    "Crohn's Disease": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Ulcerative Colitis": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Blood in stool"], severity: "Immediate Action Required" },
+    "Gallstones": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Kidney Stones": { category: "Urinary", symptoms: ["Severe pain", "Blood in urine", "Nausea"], severity: "Immediate Action Required" },
+    "Urinary Tract Infection": { category: "Urinary", symptoms: ["Painful urination", "Frequent urination", "Cloudy urine"], severity: "Normal Care Needed" },
+    "Prostatitis": { category: "Urinary", symptoms: ["Pelvic pain", "Painful urination", "Fever"], severity: "Normal Care Needed" },
+    "Endometriosis": { category: "Reproductive", symptoms: ["Pelvic pain", "Painful periods", "Infertility"], severity: "Normal Care Needed" },
+    "Polycystic Ovary Syndrome": { category: "Reproductive", symptoms: ["Irregular periods", "Weight gain", "Acne"], severity: "Normal Care Needed" },
+    "Ovarian Cysts": { category: "Reproductive", symptoms: ["Pelvic pain", "Bloating", "Painful periods"], severity: "Normal Care Needed" },
+    "Menopause": { category: "Reproductive", symptoms: ["Hot flashes", "Mood swings", "Sleep problems"], severity: "Normal Care Needed" },
+    "Erectile Dysfunction": { category: "Reproductive", symptoms: ["Difficulty maintaining erection", "Reduced sexual desire"], severity: "Normal Care Needed" },
+    "Osteoarthritis": { category: "Chronic", symptoms: ["Joint pain", "Stiffness", "Swelling"], severity: "Normal Care Needed" },
+    "Gout": { category: "Chronic", symptoms: ["Joint pain", "Swelling", "Redness"], severity: "Normal Care Needed" },
+    "Anemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Leukemia": { category: "Blood", symptoms: ["Fatigue", "Fever", "Frequent infections"], severity: "Immediate Action Required" },
+    "Lymphoma": { category: "Blood", symptoms: ["Swollen lymph nodes", "Fatigue", "Weight loss"], severity: "Immediate Action Required" },
+    "Hemophilia": { category: "Blood", symptoms: ["Excessive bleeding", "Bruising", "Joint pain"], severity: "Immediate Action Required" },
+    "Thalassemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Sickle Cell Anemia": { category: "Blood", symptoms: ["Pain", "Fatigue", "Swelling in hands and feet"], severity: "Immediate Action Required" },
+    "Thyroid Cancer": { category: "Endocrine", symptoms: ["Lump in neck", "Hoarseness", "Difficulty swallowing"], severity: "Immediate Action Required" },
+    "Hypothyroidism": { category: "Endocrine", symptoms: ["Fatigue", "Weight gain", "Depression"], severity: "Normal Care Needed" },
+    "Hyperthyroidism": { category: "Endocrine", symptoms: ["Weight loss", "Rapid heartbeat", "Nervousness"], severity: "Normal Care Needed" },
+    "Addison's Disease": { category: "Endocrine", symptoms: ["Fatigue", "Weight loss", "Low blood pressure"], severity: "Immediate Action Required" },
+    "Cushing's Syndrome": { category: "Endocrine", symptoms: ["Weight gain", "High blood pressure", "Mood swings"], severity: "Immediate Action Required" },
+    "Pituitary Tumor": { category: "Endocrine", symptoms: ["Headaches", "Vision problems", "Hormonal imbalances"], severity: "Immediate Action Required" },
+    "Glaucoma": { category: "Eye", symptoms: ["Vision loss", "Eye pain", "Headaches"], severity: "Immediate Action Required" },
+    "Cataracts": { category: "Eye", symptoms: ["Blurred vision", "Sensitivity to light", "Difficulty seeing at night"], severity: "Normal Care Needed" },
+    "Macular Degeneration": { category: "Eye", symptoms: ["Blurred vision", "Dark spots", "Difficulty reading"], severity: "Normal Care Needed" },
+    "Conjunctivitis": { category: "Eye", symptoms: ["Redness", "Itching", "Discharge"], severity: "Normal Care Needed" },
+    "Otitis Media": { category: "Ear", symptoms: ["Ear pain", "Hearing loss", "Fever"], severity: "Normal Care Needed" },
+    "Tinnitus": { category: "Ear", symptoms: ["Ringing in ears", "Hearing loss", "Dizziness"], severity: "Normal Care Needed" },
+    "Sinusitis": { category: "Respiratory", symptoms: ["Facial pain", "Nasal congestion", "Headache"], severity: "Normal Care Needed" },
+    "Sleep Apnea": { category: "Respiratory", symptoms: ["Snoring", "Daytime fatigue", "Gasping for air"], severity: "Normal Care Needed" },
+    "Emphysema": { category: "Respiratory", symptoms: ["Shortness of breath", "Coughing", "Wheezing"], severity: "Immediate Action Required" },
+    "Chronic Bronchitis": { category: "Respiratory", symptoms: ["Cough", "Mucus production", "Shortness of breath"], severity: "Immediate Action Required" },
+    "Lung Cancer": { category: "Respiratory", symptoms: ["Cough", "Chest pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Pancreatitis": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Peptic Ulcer": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Nausea"], severity: "Normal Care Needed" },
+    "Diverticulitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Appendicitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Cirrhosis": { category: "Liver", symptoms: ["Jaundice", "Fatigue", "Abdominal swelling"], severity: "Immediate Action Required" },
+    "Hepatitis D": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Hepatitis E": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Rabies": { category: "Infectious", symptoms: ["Fever", "Headache", "Hydrophobia"], severity: "Immediate Action Required" },
+    "Toxoplasmosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Normal Care Needed" },
+    "Leptospirosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Immediate Action Required" },
+    "Schistosomiasis": { category: "Infectious", symptoms: ["Abdominal pain", "Diarrhea", "Blood in urine"], severity: "Immediate Action Required" },
+    "Dengue Hemorrhagic Fever": { category: "Infectious", symptoms: ["High fever", "Bleeding", "Shock"], severity: "Immediate Action Required" },
+    "Yellow Fever": { category: "Infectious", symptoms: ["Fever", "Jaundice", "Bleeding"], severity: "Immediate Action Required" },
+    "Zika Virus": { category: "Infectious", symptoms: ["Fever", "Rash", "Joint pain"], severity: "Normal Care Needed" },
+    "Ebola": { category: "Infectious", symptoms: ["Fever", "Bleeding", "Weakness"], severity: "Immediate Action Required" },
+    "HIV/AIDS": { category: "Infectious", symptoms: ["Fever", "Weight loss", "Fatigue"], severity: "Immediate Action Required" },
+    "Syphilis": { category: "Infectious", symptoms: ["Sores", "Rash", "Fever"], severity: "Immediate Action Required" },
+    "Gonorrhea": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Chlamydia": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Herpes": { category: "Infectious", symptoms: ["Blisters", "Itching", "Pain"], severity: "Normal Care Needed" },
+    "Scabies": { category: "Skin", symptoms: ["Itching", "Rash", "Sores"], severity: "Normal Care Needed" },
+    "Ringworm": { category: "Skin", symptoms: ["Itchy ring-shaped rash", "Redness", "Scaling"], severity: "Normal Care Needed" },
+    "Athlete's Foot": { category: "Skin", symptoms: ["Itching", "Burning", "Cracking skin"], severity: "Normal Care Needed" },
+    "Eczema": { category: "Skin", symptoms: ["Itching", "Redness", "Dry skin"], severity: "Normal Care Needed" },
+    "Acne": { category: "Skin", symptoms: ["Pimples", "Blackheads", "Redness"], severity: "Normal Care Needed" },
+    "Rosacea": { category: "Skin", symptoms: ["Facial redness", "Swelling", "Bumps"], severity: "Normal Care Needed" },
+    "Celiac Disease": { category: "Autoimmune", symptoms: ["Diarrhea", "Bloating", "Weight loss"], severity: "Normal Care Needed" },
+    "Lupus": { category: "Autoimmune", symptoms: ["Fatigue", "Joint pain", "Rash"], severity: "Immediate Action Required" },
+    "Rheumatoid Arthritis": { category: "Autoimmune", symptoms: ["Joint pain", "Swelling", "Stiffness"], severity: "Normal Care Needed" },
+    "Multiple Sclerosis": { category: "Neurological", symptoms: ["Numbness", "Weakness", "Vision problems"], severity: "Immediate Action Required" },
+    "Fibromyalgia": { category: "Chronic", symptoms: ["Widespread pain", "Fatigue", "Sleep problems"], severity: "Normal Care Needed" },
+    "Chronic Fatigue Syndrome": { category: "Chronic", symptoms: ["Extreme fatigue", "Sleep problems", "Memory issues"], severity: "Normal Care Needed" },
+    "Irritable Bowel Syndrome": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Diarrhea"], severity: "Normal Care Needed" },
+    "Crohn's Disease": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Ulcerative Colitis": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Blood in stool"], severity: "Immediate Action Required" },
+    "Gallstones": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Kidney Stones": { category: "Urinary", symptoms: ["Severe pain", "Blood in urine", "Nausea"], severity: "Immediate Action Required" },
+    "Urinary Tract Infection": { category: "Urinary", symptoms: ["Painful urination", "Frequent urination", "Cloudy urine"], severity: "Normal Care Needed" },
+    "Prostatitis": { category: "Urinary", symptoms: ["Pelvic pain", "Painful urination", "Fever"], severity: "Normal Care Needed" },
+    "Endometriosis": { category: "Reproductive", symptoms: ["Pelvic pain", "Painful periods", "Infertility"], severity: "Normal Care Needed" },
+    "Polycystic Ovary Syndrome": { category: "Reproductive", symptoms: ["Irregular periods", "Weight gain", "Acne"], severity: "Normal Care Needed" },
+    "Ovarian Cysts": { category: "Reproductive", symptoms: ["Pelvic pain", "Bloating", "Painful periods"], severity: "Normal Care Needed" },
+    "Menopause": { category: "Reproductive", symptoms: ["Hot flashes", "Mood swings", "Sleep problems"], severity: "Normal Care Needed" },
+    "Erectile Dysfunction": { category: "Reproductive", symptoms: ["Difficulty maintaining erection", "Reduced sexual desire"], severity: "Normal Care Needed" },
+    "Osteoarthritis": { category: "Chronic", symptoms: ["Joint pain", "Stiffness", "Swelling"], severity: "Normal Care Needed" },
+    "Gout": { category: "Chronic", symptoms: ["Joint pain", "Swelling", "Redness"], severity: "Normal Care Needed" },
+    "Anemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Leukemia": { category: "Blood", symptoms: ["Fatigue", "Fever", "Frequent infections"], severity: "Immediate Action Required" },
+    "Lymphoma": { category: "Blood", symptoms: ["Swollen lymph nodes", "Fatigue", "Weight loss"], severity: "Immediate Action Required" },
+    "Hemophilia": { category: "Blood", symptoms: ["Excessive bleeding", "Bruising", "Joint pain"], severity: "Immediate Action Required" },
+    "Thalassemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Sickle Cell Anemia": { category: "Blood", symptoms: ["Pain", "Fatigue", "Swelling in hands and feet"], severity: "Immediate Action Required" },
+    "Thyroid Cancer": { category: "Endocrine", symptoms: ["Lump in neck", "Hoarseness", "Difficulty swallowing"], severity: "Immediate Action Required" },
+    "Hypothyroidism": { category: "Endocrine", symptoms: ["Fatigue", "Weight gain", "Depression"], severity: "Normal Care Needed" },
+    "Hyperthyroidism": { category: "Endocrine", symptoms: ["Weight loss", "Rapid heartbeat", "Nervousness"], severity: "Normal Care Needed" },
+    "Addison's Disease": { category: "Endocrine", symptoms: ["Fatigue", "Weight loss", "Low blood pressure"], severity: "Immediate Action Required" },
+    "Cushing's Syndrome": { category: "Endocrine", symptoms: ["Weight gain", "High blood pressure", "Mood swings"], severity: "Immediate Action Required" },
+    "Pituitary Tumor": { category: "Endocrine", symptoms: ["Headaches", "Vision problems", "Hormonal imbalances"], severity: "Immediate Action Required" },
+    "Glaucoma": { category: "Eye", symptoms: ["Vision loss", "Eye pain", "Headaches"], severity: "Immediate Action Required" },
+    "Cataracts": { category: "Eye", symptoms: ["Blurred vision", "Sensitivity to light", "Difficulty seeing at night"], severity: "Normal Care Needed" },
+    "Macular Degeneration": { category: "Eye", symptoms: ["Blurred vision", "Dark spots", "Difficulty reading"], severity: "Normal Care Needed" },
+    "Conjunctivitis": { category: "Eye", symptoms: ["Redness", "Itching", "Discharge"], severity: "Normal Care Needed" },
+    "Otitis Media": { category: "Ear", symptoms: ["Ear pain", "Hearing loss", "Fever"], severity: "Normal Care Needed" },
+    "Tinnitus": { category: "Ear", symptoms: ["Ringing in ears", "Hearing loss", "Dizziness"], severity: "Normal Care Needed" },
+    "Sinusitis": { category: "Respiratory", symptoms: ["Facial pain", "Nasal congestion", "Headache"], severity: "Normal Care Needed" },
+    "Sleep Apnea": { category: "Respiratory", symptoms: ["Snoring", "Daytime fatigue", "Gasping for air"], severity: "Normal Care Needed" },
+    "Emphysema": { category: "Respiratory", symptoms: ["Shortness of breath", "Coughing", "Wheezing"], severity: "Immediate Action Required" },
+    "Chronic Bronchitis": { category: "Respiratory", symptoms: ["Cough", "Mucus production", "Shortness of breath"], severity: "Immediate Action Required" },
+    "Lung Cancer": { category: "Respiratory", symptoms: ["Cough", "Chest pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Pancreatitis": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Peptic Ulcer": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Nausea"], severity: "Normal Care Needed" },
+    "Diverticulitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Appendicitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Cirrhosis": { category: "Liver", symptoms: ["Jaundice", "Fatigue", "Abdominal swelling"], severity: "Immediate Action Required" },
+    "Hepatitis D": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Hepatitis E": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Rabies": { category: "Infectious", symptoms: ["Fever", "Headache", "Hydrophobia"], severity: "Immediate Action Required" },
+    "Toxoplasmosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Normal Care Needed" },
+    "Leptospirosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Immediate Action Required" },
+    "Schistosomiasis": { category: "Infectious", symptoms: ["Abdominal pain", "Diarrhea", "Blood in urine"], severity: "Immediate Action Required" },
+    "Dengue Hemorrhagic Fever": { category: "Infectious", symptoms: ["High fever", "Bleeding", "Shock"], severity: "Immediate Action Required" },
+    "Yellow Fever": { category: "Infectious", symptoms: ["Fever", "Jaundice", "Bleeding"], severity: "Immediate Action Required" },
+    "Zika Virus": { category: "Infectious", symptoms: ["Fever", "Rash", "Joint pain"], severity: "Normal Care Needed" },
+    "Ebola": { category: "Infectious", symptoms: ["Fever", "Bleeding", "Weakness"], severity: "Immediate Action Required" },
+    "HIV/AIDS": { category: "Infectious", symptoms: ["Fever", "Weight loss", "Fatigue"], severity: "Immediate Action Required" },
+    "Syphilis": { category: "Infectious", symptoms: ["Sores", "Rash", "Fever"], severity: "Immediate Action Required" },
+    "Gonorrhea": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Chlamydia": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Herpes": { category: "Infectious", symptoms: ["Blisters", "Itching", "Pain"], severity: "Normal Care Needed" },
+    "Scabies": { category: "Skin", symptoms: ["Itching", "Rash", "Sores"], severity: "Normal Care Needed" },
+    "Ringworm": { category: "Skin", symptoms: ["Itchy ring-shaped rash", "Redness", "Scaling"], severity: "Normal Care Needed" },
+    "Athlete's Foot": { category: "Skin", symptoms: ["Itching", "Burning", "Cracking skin"], severity: "Normal Care Needed" },
+    "Eczema": { category: "Skin", symptoms: ["Itching", "Redness", "Dry skin"], severity: "Normal Care Needed" },
+    "Acne": { category: "Skin", symptoms: ["Pimples", "Blackheads", "Redness"], severity: "Normal Care Needed" },
+    "Rosacea": { category: "Skin", symptoms: ["Facial redness", "Swelling", "Bumps"], severity: "Normal Care Needed" },
+    "Celiac Disease": { category: "Autoimmune", symptoms: ["Diarrhea", "Bloating", "Weight loss"], severity: "Normal Care Needed" },
+    "Lupus": { category: "Autoimmune", symptoms: ["Fatigue", "Joint pain", "Rash"], severity: "Immediate Action Required" },
+    "Rheumatoid Arthritis": { category: "Autoimmune", symptoms: ["Joint pain", "Swelling", "Stiffness"], severity: "Normal Care Needed" },
+    "Multiple Sclerosis": { category: "Neurological", symptoms: ["Numbness", "Weakness", "Vision problems"], severity: "Immediate Action Required" },
+    "Fibromyalgia": { category: "Chronic", symptoms: ["Widespread pain", "Fatigue", "Sleep problems"], severity: "Normal Care Needed" },
+    "Chronic Fatigue Syndrome": { category: "Chronic", symptoms: ["Extreme fatigue", "Sleep problems", "Memory issues"], severity: "Normal Care Needed" },
+    "Irritable Bowel Syndrome": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Diarrhea"], severity: "Normal Care Needed" },
+    "Crohn's Disease": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Ulcerative Colitis": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Blood in stool"], severity: "Immediate Action Required" },
+    "Gallstones": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Kidney Stones": { category: "Urinary", symptoms: ["Severe pain", "Blood in urine", "Nausea"], severity: "Immediate Action Required" },
+    "Urinary Tract Infection": { category: "Urinary", symptoms: ["Painful urination", "Frequent urination", "Cloudy urine"], severity: "Normal Care Needed" },
+    "Prostatitis": { category: "Urinary", symptoms: ["Pelvic pain", "Painful urination", "Fever"], severity: "Normal Care Needed" },
+    "Endometriosis": { category: "Reproductive", symptoms: ["Pelvic pain", "Painful periods", "Infertility"], severity: "Normal Care Needed" },
+    "Polycystic Ovary Syndrome": { category: "Reproductive", symptoms: ["Irregular periods", "Weight gain", "Acne"], severity: "Normal Care Needed" },
+    "Ovarian Cysts": { category: "Reproductive", symptoms: ["Pelvic pain", "Bloating", "Painful periods"], severity: "Normal Care Needed" },
+    "Menopause": { category: "Reproductive", symptoms: ["Hot flashes", "Mood swings", "Sleep problems"], severity: "Normal Care Needed" },
+    "Erectile Dysfunction": { category: "Reproductive", symptoms: ["Difficulty maintaining erection", "Reduced sexual desire"], severity: "Normal Care Needed" },
+    "Osteoarthritis": { category: "Chronic", symptoms: ["Joint pain", "Stiffness", "Swelling"], severity: "Normal Care Needed" },
+    "Gout": { category: "Chronic", symptoms: ["Joint pain", "Swelling", "Redness"], severity: "Normal Care Needed" },
+    "Anemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Leukemia": { category: "Blood", symptoms: ["Fatigue", "Fever", "Frequent infections"], severity: "Immediate Action Required" },
+    "Lymphoma": { category: "Blood", symptoms: ["Swollen lymph nodes", "Fatigue", "Weight loss"], severity: "Immediate Action Required" },
+    "Hemophilia": { category: "Blood", symptoms: ["Excessive bleeding", "Bruising", "Joint pain"], severity: "Immediate Action Required" },
+    "Thalassemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Sickle Cell Anemia": { category: "Blood", symptoms: ["Pain", "Fatigue", "Swelling in hands and feet"], severity: "Immediate Action Required" },
+    "Thyroid Cancer": { category: "Endocrine", symptoms: ["Lump in neck", "Hoarseness", "Difficulty swallowing"], severity: "Immediate Action Required" },
+    "Hypothyroidism": { category: "Endocrine", symptoms: ["Fatigue", "Weight gain", "Depression"], severity: "Normal Care Needed" },
+    "Hyperthyroidism": { category: "Endocrine", symptoms: ["Weight loss", "Rapid heartbeat", "Nervousness"], severity: "Normal Care Needed" },
+    "Addison's Disease": { category: "Endocrine", symptoms: ["Fatigue", "Weight loss", "Low blood pressure"], severity: "Immediate Action Required" },
+    "Cushing's Syndrome": { category: "Endocrine", symptoms: ["Weight gain", "High blood pressure", "Mood swings"], severity: "Immediate Action Required" },
+    "Pituitary Tumor": { category: "Endocrine", symptoms: ["Headaches", "Vision problems", "Hormonal imbalances"], severity: "Immediate Action Required" },
+    "Glaucoma": { category: "Eye", symptoms: ["Vision loss", "Eye pain", "Headaches"], severity: "Immediate Action Required" },
+    "Cataracts": { category: "Eye", symptoms: ["Blurred vision", "Sensitivity to light", "Difficulty seeing at night"], severity: "Normal Care Needed" },
+    "Macular Degeneration": { category: "Eye", symptoms: ["Blurred vision", "Dark spots", "Difficulty reading"], severity: "Normal Care Needed" },
+    "Conjunctivitis": { category: "Eye", symptoms: ["Redness", "Itching", "Discharge"], severity: "Normal Care Needed" },
+    "Otitis Media": { category: "Ear", symptoms: ["Ear pain", "Hearing loss", "Fever"], severity: "Normal Care Needed" },
+    "Tinnitus": { category: "Ear", symptoms: ["Ringing in ears", "Hearing loss", "Dizziness"], severity: "Normal Care Needed" },
+    "Sinusitis": { category: "Respiratory", symptoms: ["Facial pain", "Nasal congestion", "Headache"], severity: "Normal Care Needed" },
+    "Sleep Apnea": { category: "Respiratory", symptoms: ["Snoring", "Daytime fatigue", "Gasping for air"], severity: "Normal Care Needed" },
+    "Emphysema": { category: "Respiratory", symptoms: ["Shortness of breath", "Coughing", "Wheezing"], severity: "Immediate Action Required" },
+    "Chronic Bronchitis": { category: "Respiratory", symptoms: ["Cough", "Mucus production", "Shortness of breath"], severity: "Immediate Action Required" },
+    "Lung Cancer": { category: "Respiratory", symptoms: ["Cough", "Chest pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Pancreatitis": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Peptic Ulcer": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Nausea"], severity: "Normal Care Needed" },
+    "Diverticulitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Appendicitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Cirrhosis": { category: "Liver", symptoms: ["Jaundice", "Fatigue", "Abdominal swelling"], severity: "Immediate Action Required" },
+    "Hepatitis D": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Hepatitis E": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Rabies": { category: "Infectious", symptoms: ["Fever", "Headache", "Hydrophobia"], severity: "Immediate Action Required" },
+    "Toxoplasmosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Normal Care Needed" },
+    "Leptospirosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Immediate Action Required" },
+    "Schistosomiasis": { category: "Infectious", symptoms: ["Abdominal pain", "Diarrhea", "Blood in urine"], severity: "Immediate Action Required" },
+    "Dengue Hemorrhagic Fever": { category: "Infectious", symptoms: ["High fever", "Bleeding", "Shock"], severity: "Immediate Action Required" },
+    "Yellow Fever": { category: "Infectious", symptoms: ["Fever", "Jaundice", "Bleeding"], severity: "Immediate Action Required" },
+    "Zika Virus": { category: "Infectious", symptoms: ["Fever", "Rash", "Joint pain"], severity: "Normal Care Needed" },
+    "Ebola": { category: "Infectious", symptoms: ["Fever", "Bleeding", "Weakness"], severity: "Immediate Action Required" },
+    "HIV/AIDS": { category: "Infectious", symptoms: ["Fever", "Weight loss", "Fatigue"], severity: "Immediate Action Required" },
+    "Syphilis": { category: "Infectious", symptoms: ["Sores", "Rash", "Fever"], severity: "Immediate Action Required" },
+    "Gonorrhea": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Chlamydia": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Herpes": { category: "Infectious", symptoms: ["Blisters", "Itching", "Pain"], severity: "Normal Care Needed" },
+    "Scabies": { category: "Skin", symptoms: ["Itching", "Rash", "Sores"], severity: "Normal Care Needed" },
+    "Ringworm": { category: "Skin", symptoms: ["Itchy ring-shaped rash", "Redness", "Scaling"], severity: "Normal Care Needed" },
+    "Athlete's Foot": { category: "Skin", symptoms: ["Itching", "Burning", "Cracking skin"], severity: "Normal Care Needed" },
+    "Eczema": { category: "Skin", symptoms: ["Itching", "Redness", "Dry skin"], severity: "Normal Care Needed" },
+    "Acne": { category: "Skin", symptoms: ["Pimples", "Blackheads", "Redness"], severity: "Normal Care Needed" },
+    "Rosacea": { category: "Skin", symptoms: ["Facial redness", "Swelling", "Bumps"], severity: "Normal Care Needed" },
+    "Celiac Disease": { category: "Autoimmune", symptoms: ["Diarrhea", "Bloating", "Weight loss"], severity: "Normal Care Needed" },
+    "Lupus": { category: "Autoimmune", symptoms: ["Fatigue", "Joint pain", "Rash"], severity: "Immediate Action Required" },
+    "Rheumatoid Arthritis": { category: "Autoimmune", symptoms: ["Joint pain", "Swelling", "Stiffness"], severity: "Normal Care Needed" },
+    "Multiple Sclerosis": { category: "Neurological", symptoms: ["Numbness", "Weakness", "Vision problems"], severity: "Immediate Action Required" },
+    "Fibromyalgia": { category: "Chronic", symptoms: ["Widespread pain", "Fatigue", "Sleep problems"], severity: "Normal Care Needed" },
+    "Chronic Fatigue Syndrome": { category: "Chronic", symptoms: ["Extreme fatigue", "Sleep problems", "Memory issues"], severity: "Normal Care Needed" },
+    "Irritable Bowel Syndrome": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Diarrhea"], severity: "Normal Care Needed" },
+    "Crohn's Disease": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Ulcerative Colitis": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Blood in stool"], severity: "Immediate Action Required" },
+    "Gallstones": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Kidney Stones": { category: "Urinary", symptoms: ["Severe pain", "Blood in urine", "Nausea"], severity: "Immediate Action Required" },
+    "Urinary Tract Infection": { category: "Urinary", symptoms: ["Painful urination", "Frequent urination", "Cloudy urine"], severity: "Normal Care Needed" },
+    "Prostatitis": { category: "Urinary", symptoms: ["Pelvic pain", "Painful urination", "Fever"], severity: "Normal Care Needed" },
+    "Endometriosis": { category: "Reproductive", symptoms: ["Pelvic pain", "Painful periods", "Infertility"], severity: "Normal Care Needed" },
+    "Polycystic Ovary Syndrome": { category: "Reproductive", symptoms: ["Irregular periods", "Weight gain", "Acne"], severity: "Normal Care Needed" },
+    "Ovarian Cysts": { category: "Reproductive", symptoms: ["Pelvic pain", "Bloating", "Painful periods"], severity: "Normal Care Needed" },
+    "Menopause": { category: "Reproductive", symptoms: ["Hot flashes", "Mood swings", "Sleep problems"], severity: "Normal Care Needed" },
+    "Erectile Dysfunction": { category: "Reproductive", symptoms: ["Difficulty maintaining erection", "Reduced sexual desire"], severity: "Normal Care Needed" },
+    "Osteoarthritis": { category: "Chronic", symptoms: ["Joint pain", "Stiffness", "Swelling"], severity: "Normal Care Needed" },
+    "Gout": { category: "Chronic", symptoms: ["Joint pain", "Swelling", "Redness"], severity: "Normal Care Needed" },
+    "Anemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Leukemia": { category: "Blood", symptoms: ["Fatigue", "Fever", "Frequent infections"], severity: "Immediate Action Required" },
+    "Lymphoma": { category: "Blood", symptoms: ["Swollen lymph nodes", "Fatigue", "Weight loss"], severity: "Immediate Action Required" },
+    "Hemophilia": { category: "Blood", symptoms: ["Excessive bleeding", "Bruising", "Joint pain"], severity: "Immediate Action Required" },
+    "Thalassemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Sickle Cell Anemia": { category: "Blood", symptoms: ["Pain", "Fatigue", "Swelling in hands and feet"], severity: "Immediate Action Required" },
+    "Thyroid Cancer": { category: "Endocrine", symptoms: ["Lump in neck", "Hoarseness", "Difficulty swallowing"], severity: "Immediate Action Required" },
+    "Hypothyroidism": { category: "Endocrine", symptoms: ["Fatigue", "Weight gain", "Depression"], severity: "Normal Care Needed" },
+    "Hyperthyroidism": { category: "Endocrine", symptoms: ["Weight loss", "Rapid heartbeat", "Nervousness"], severity: "Normal Care Needed" },
+    "Addison's Disease": { category: "Endocrine", symptoms: ["Fatigue", "Weight loss", "Low blood pressure"], severity: "Immediate Action Required" },
+    "Cushing's Syndrome": { category: "Endocrine", symptoms: ["Weight gain", "High blood pressure", "Mood swings"], severity: "Immediate Action Required" },
+    "Pituitary Tumor": { category: "Endocrine", symptoms: ["Headaches", "Vision problems", "Hormonal imbalances"], severity: "Immediate Action Required" },
+    "Glaucoma": { category: "Eye", symptoms: ["Vision loss", "Eye pain", "Headaches"], severity: "Immediate Action Required" },
+    "Cataracts": { category: "Eye", symptoms: ["Blurred vision", "Sensitivity to light", "Difficulty seeing at night"], severity: "Normal Care Needed" },
+    "Macular Degeneration": { category: "Eye", symptoms: ["Blurred vision", "Dark spots", "Difficulty reading"], severity: "Normal Care Needed" },
+    "Conjunctivitis": { category: "Eye", symptoms: ["Redness", "Itching", "Discharge"], severity: "Normal Care Needed" },
+    "Otitis Media": { category: "Ear", symptoms: ["Ear pain", "Hearing loss", "Fever"], severity: "Normal Care Needed" },
+    "Tinnitus": { category: "Ear", symptoms: ["Ringing in ears", "Hearing loss", "Dizziness"], severity: "Normal Care Needed" },
+    "Sinusitis": { category: "Respiratory", symptoms: ["Facial pain", "Nasal congestion", "Headache"], severity: "Normal Care Needed" },
+    "Sleep Apnea": { category: "Respiratory", symptoms: ["Snoring", "Daytime fatigue", "Gasping for air"], severity: "Normal Care Needed" },
+    "Emphysema": { category: "Respiratory", symptoms: ["Shortness of breath", "Coughing", "Wheezing"], severity: "Immediate Action Required" },
+    "Chronic Bronchitis": { category: "Respiratory", symptoms: ["Cough", "Mucus production", "Shortness of breath"], severity: "Immediate Action Required" },
+    "Lung Cancer": { category: "Respiratory", symptoms: ["Cough", "Chest pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Pancreatitis": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Peptic Ulcer": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Nausea"], severity: "Normal Care Needed" },
+    "Diverticulitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Appendicitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Cirrhosis": { category: "Liver", symptoms: ["Jaundice", "Fatigue", "Abdominal swelling"], severity: "Immediate Action Required" },
+    "Hepatitis D": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Hepatitis E": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Rabies": { category: "Infectious", symptoms: ["Fever", "Headache", "Hydrophobia"], severity: "Immediate Action Required" },
+    "Toxoplasmosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Normal Care Needed" },
+    "Leptospirosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Immediate Action Required" },
+    "Schistosomiasis": { category: "Infectious", symptoms: ["Abdominal pain", "Diarrhea", "Blood in urine"], severity: "Immediate Action Required" },
+    "Dengue Hemorrhagic Fever": { category: "Infectious", symptoms: ["High fever", "Bleeding", "Shock"], severity: "Immediate Action Required" },
+    "Yellow Fever": { category: "Infectious", symptoms: ["Fever", "Jaundice", "Bleeding"], severity: "Immediate Action Required" },
+    "Zika Virus": { category: "Infectious", symptoms: ["Fever", "Rash", "Joint pain"], severity: "Normal Care Needed" },
+    "Ebola": { category: "Infectious", symptoms: ["Fever", "Bleeding", "Weakness"], severity: "Immediate Action Required" },
+    "HIV/AIDS": { category: "Infectious", symptoms: ["Fever", "Weight loss", "Fatigue"], severity: "Immediate Action Required" },
+    "Syphilis": { category: "Infectious", symptoms: ["Sores", "Rash", "Fever"], severity: "Immediate Action Required" },
+    "Gonorrhea": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Chlamydia": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Herpes": { category: "Infectious", symptoms: ["Blisters", "Itching", "Pain"], severity: "Normal Care Needed" },
+    "Scabies": { category: "Skin", symptoms: ["Itching", "Rash", "Sores"], severity: "Normal Care Needed" },
+    "Ringworm": { category: "Skin", symptoms: ["Itchy ring-shaped rash", "Redness", "Scaling"], severity: "Normal Care Needed" },
+    "Athlete's Foot": { category: "Skin", symptoms: ["Itching", "Burning", "Cracking skin"], severity: "Normal Care Needed" },
+    "Eczema": { category: "Skin", symptoms: ["Itching", "Redness", "Dry skin"], severity: "Normal Care Needed" },
+    "Acne": { category: "Skin", symptoms: ["Pimples", "Blackheads", "Redness"], severity: "Normal Care Needed" },
+    "Rosacea": { category: "Skin", symptoms: ["Facial redness", "Swelling", "Bumps"], severity: "Normal Care Needed" },
+    "Celiac Disease": { category: "Autoimmune", symptoms: ["Diarrhea", "Bloating", "Weight loss"], severity: "Normal Care Needed" },
+    "Lupus": { category: "Autoimmune", symptoms: ["Fatigue", "Joint pain", "Rash"], severity: "Immediate Action Required" },
+    "Rheumatoid Arthritis": { category: "Autoimmune", symptoms: ["Joint pain", "Swelling", "Stiffness"], severity: "Normal Care Needed" },
+    "Multiple Sclerosis": { category: "Neurological", symptoms: ["Numbness", "Weakness", "Vision problems"], severity: "Immediate Action Required" },
+    "Fibromyalgia": { category: "Chronic", symptoms: ["Widespread pain", "Fatigue", "Sleep problems"], severity: "Normal Care Needed" },
+    "Chronic Fatigue Syndrome": { category: "Chronic", symptoms: ["Extreme fatigue", "Sleep problems", "Memory issues"], severity: "Normal Care Needed" },
+    "Irritable Bowel Syndrome": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Diarrhea"], severity: "Normal Care Needed" },
+    "Crohn's Disease": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Ulcerative Colitis": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Blood in stool"], severity: "Immediate Action Required" },
+    "Gallstones": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Kidney Stones": { category: "Urinary", symptoms: ["Severe pain", "Blood in urine", "Nausea"], severity: "Immediate Action Required" },
+    "Urinary Tract Infection": { category: "Urinary", symptoms: ["Painful urination", "Frequent urination", "Cloudy urine"], severity: "Normal Care Needed" },
+    "Prostatitis": { category: "Urinary", symptoms: ["Pelvic pain", "Painful urination", "Fever"], severity: "Normal Care Needed" },
+    "Endometriosis": { category: "Reproductive", symptoms: ["Pelvic pain", "Painful periods", "Infertility"], severity: "Normal Care Needed" },
+    "Polycystic Ovary Syndrome": { category: "Reproductive", symptoms: ["Irregular periods", "Weight gain", "Acne"], severity: "Normal Care Needed" },
+    "Ovarian Cysts": { category: "Reproductive", symptoms: ["Pelvic pain", "Bloating", "Painful periods"], severity: "Normal Care Needed" },
+    "Menopause": { category: "Reproductive", symptoms: ["Hot flashes", "Mood swings", "Sleep problems"], severity: "Normal Care Needed" },
+    "Erectile Dysfunction": { category: "Reproductive", symptoms: ["Difficulty maintaining erection", "Reduced sexual desire"], severity: "Normal Care Needed" },
+    "Osteoarthritis": { category: "Chronic", symptoms: ["Joint pain", "Stiffness", "Swelling"], severity: "Normal Care Needed" },
+    "Gout": { category: "Chronic", symptoms: ["Joint pain", "Swelling", "Redness"], severity: "Normal Care Needed" },
+    "Anemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Leukemia": { category: "Blood", symptoms: ["Fatigue", "Fever", "Frequent infections"], severity: "Immediate Action Required" },
+    "Lymphoma": { category: "Blood", symptoms: ["Swollen lymph nodes", "Fatigue", "Weight loss"], severity: "Immediate Action Required" },
+    "Hemophilia": { category: "Blood", symptoms: ["Excessive bleeding", "Bruising", "Joint pain"], severity: "Immediate Action Required" },
+    "Thalassemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Sickle Cell Anemia": { category: "Blood", symptoms: ["Pain", "Fatigue", "Swelling in hands and feet"], severity: "Immediate Action Required" },
+    "Thyroid Cancer": { category: "Endocrine", symptoms: ["Lump in neck", "Hoarseness", "Difficulty swallowing"], severity: "Immediate Action Required" },
+    "Hypothyroidism": { category: "Endocrine", symptoms: ["Fatigue", "Weight gain", "Depression"], severity: "Normal Care Needed" },
+    "Hyperthyroidism": { category: "Endocrine", symptoms: ["Weight loss", "Rapid heartbeat", "Nervousness"], severity: "Normal Care Needed" },
+    "Addison's Disease": { category: "Endocrine", symptoms: ["Fatigue", "Weight loss", "Low blood pressure"], severity: "Immediate Action Required" },
+    "Cushing's Syndrome": { category: "Endocrine", symptoms: ["Weight gain", "High blood pressure", "Mood swings"], severity: "Immediate Action Required" },
+    "Pituitary Tumor": { category: "Endocrine", symptoms: ["Headaches", "Vision problems", "Hormonal imbalances"], severity: "Immediate Action Required" },
+    "Glaucoma": { category: "Eye", symptoms: ["Vision loss", "Eye pain", "Headaches"], severity: "Immediate Action Required" },
+    "Cataracts": { category: "Eye", symptoms: ["Blurred vision", "Sensitivity to light", "Difficulty seeing at night"], severity: "Normal Care Needed" },
+    "Macular Degeneration": { category: "Eye", symptoms: ["Blurred vision", "Dark spots", "Difficulty reading"], severity: "Normal Care Needed" },
+    "Conjunctivitis": { category: "Eye", symptoms: ["Redness", "Itching", "Discharge"], severity: "Normal Care Needed" },
+    "Otitis Media": { category: "Ear", symptoms: ["Ear pain", "Hearing loss", "Fever"], severity: "Normal Care Needed" },
+    "Tinnitus": { category: "Ear", symptoms: ["Ringing in ears", "Hearing loss", "Dizziness"], severity: "Normal Care Needed" },
+    "Sinusitis": { category: "Respiratory", symptoms: ["Facial pain", "Nasal congestion", "Headache"], severity: "Normal Care Needed" },
+    "Sleep Apnea": { category: "Respiratory", symptoms: ["Snoring", "Daytime fatigue", "Gasping for air"], severity: "Normal Care Needed" },
+    "Emphysema": { category: "Respiratory", symptoms: ["Shortness of breath", "Coughing", "Wheezing"], severity: "Immediate Action Required" },
+    "Chronic Bronchitis": { category: "Respiratory", symptoms: ["Cough", "Mucus production", "Shortness of breath"], severity: "Immediate Action Required" },
+    "Lung Cancer": { category: "Respiratory", symptoms: ["Cough", "Chest pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Pancreatitis": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Peptic Ulcer": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Nausea"], severity: "Normal Care Needed" },
+    "Diverticulitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Appendicitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Cirrhosis": { category: "Liver", symptoms: ["Jaundice", "Fatigue", "Abdominal swelling"], severity: "Immediate Action Required" },
+    "Hepatitis D": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Hepatitis E": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Rabies": { category: "Infectious", symptoms: ["Fever", "Headache", "Hydrophobia"], severity: "Immediate Action Required" },
+    "Toxoplasmosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Normal Care Needed" },
+    "Leptospirosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Immediate Action Required" },
+    "Schistosomiasis": { category: "Infectious", symptoms: ["Abdominal pain", "Diarrhea", "Blood in urine"], severity: "Immediate Action Required" },
+    "Dengue Hemorrhagic Fever": { category: "Infectious", symptoms: ["High fever", "Bleeding", "Shock"], severity: "Immediate Action Required" },
+    "Yellow Fever": { category: "Infectious", symptoms: ["Fever", "Jaundice", "Bleeding"], severity: "Immediate Action Required" },
+    "Zika Virus": { category: "Infectious", symptoms: ["Fever", "Rash", "Joint pain"], severity: "Normal Care Needed" },
+    "Ebola": { category: "Infectious", symptoms: ["Fever", "Bleeding", "Weakness"], severity: "Immediate Action Required" },
+    "HIV/AIDS": { category: "Infectious", symptoms: ["Fever", "Weight loss", "Fatigue"], severity: "Immediate Action Required" },
+    "Syphilis": { category: "Infectious", symptoms: ["Sores", "Rash", "Fever"], severity: "Immediate Action Required" },
+    "Gonorrhea": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Chlamydia": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Herpes": { category: "Infectious", symptoms: ["Blisters", "Itching", "Pain"], severity: "Normal Care Needed" },
+    "Scabies": { category: "Skin", symptoms: ["Itching", "Rash", "Sores"], severity: "Normal Care Needed" },
+    "Ringworm": { category: "Skin", symptoms: ["Itchy ring-shaped rash", "Redness", "Scaling"], severity: "Normal Care Needed" },
+    "Athlete's Foot": { category: "Skin", symptoms: ["Itching", "Burning", "Cracking skin"], severity: "Normal Care Needed" },
+    "Eczema": { category: "Skin", symptoms: ["Itching", "Redness", "Dry skin"], severity: "Normal Care Needed" },
+    "Acne": { category: "Skin", symptoms: ["Pimples", "Blackheads", "Redness"], severity: "Normal Care Needed" },
+    "Rosacea": { category: "Skin", symptoms: ["Facial redness", "Swelling", "Bumps"], severity: "Normal Care Needed" },
+    "Celiac Disease": { category: "Autoimmune", symptoms: ["Diarrhea", "Bloating", "Weight loss"], severity: "Normal Care Needed" },
+    "Lupus": { category: "Autoimmune", symptoms: ["Fatigue", "Joint pain", "Rash"], severity: "Immediate Action Required" },
+    "Rheumatoid Arthritis": { category: "Autoimmune", symptoms: ["Joint pain", "Swelling", "Stiffness"], severity: "Normal Care Needed" },
+    "Multiple Sclerosis": { category: "Neurological", symptoms: ["Numbness", "Weakness", "Vision problems"], severity: "Immediate Action Required" },
+    "Fibromyalgia": { category: "Chronic", symptoms: ["Widespread pain", "Fatigue", "Sleep problems"], severity: "Normal Care Needed" },
+    "Chronic Fatigue Syndrome": { category: "Chronic", symptoms: ["Extreme fatigue", "Sleep problems", "Memory issues"], severity: "Normal Care Needed" },
+    "Irritable Bowel Syndrome": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Diarrhea"], severity: "Normal Care Needed" },
+    "Crohn's Disease": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Ulcerative Colitis": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Blood in stool"], severity: "Immediate Action Required" },
+    "Gallstones": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Kidney Stones": { category: "Urinary", symptoms: ["Severe pain", "Blood in urine", "Nausea"], severity: "Immediate Action Required" },
+    "Urinary Tract Infection": { category: "Urinary", symptoms: ["Painful urination", "Frequent urination", "Cloudy urine"], severity: "Normal Care Needed" },
+    "Prostatitis": { category: "Urinary", symptoms: ["Pelvic pain", "Painful urination", "Fever"], severity: "Normal Care Needed" },
+    "Endometriosis": { category: "Reproductive", symptoms: ["Pelvic pain", "Painful periods", "Infertility"], severity: "Normal Care Needed" },
+    "Polycystic Ovary Syndrome": { category: "Reproductive", symptoms: ["Irregular periods", "Weight gain", "Acne"], severity: "Normal Care Needed" },
+    "Ovarian Cysts": { category: "Reproductive", symptoms: ["Pelvic pain", "Bloating", "Painful periods"], severity: "Normal Care Needed" },
+    "Menopause": { category: "Reproductive", symptoms: ["Hot flashes", "Mood swings", "Sleep problems"], severity: "Normal Care Needed" },
+    "Erectile Dysfunction": { category: "Reproductive", symptoms: ["Difficulty maintaining erection", "Reduced sexual desire"], severity: "Normal Care Needed" },
+    "Osteoarthritis": { category: "Chronic", symptoms: ["Joint pain", "Stiffness", "Swelling"], severity: "Normal Care Needed" },
+    "Gout": { category: "Chronic", symptoms: ["Joint pain", "Swelling", "Redness"], severity: "Normal Care Needed" },
+    "Anemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Leukemia": { category: "Blood", symptoms: ["Fatigue", "Fever", "Frequent infections"], severity: "Immediate Action Required" },
+    "Lymphoma": { category: "Blood", symptoms: ["Swollen lymph nodes", "Fatigue", "Weight loss"], severity: "Immediate Action Required" },
+    "Hemophilia": { category: "Blood", symptoms: ["Excessive bleeding", "Bruising", "Joint pain"], severity: "Immediate Action Required" },
+    "Thalassemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Sickle Cell Anemia": { category: "Blood", symptoms: ["Pain", "Fatigue", "Swelling in hands and feet"], severity: "Immediate Action Required" },
+    "Thyroid Cancer": { category: "Endocrine", symptoms: ["Lump in neck", "Hoarseness", "Difficulty swallowing"], severity: "Immediate Action Required" },
+    "Hypothyroidism": { category: "Endocrine", symptoms: ["Fatigue", "Weight gain", "Depression"], severity: "Normal Care Needed" },
+    "Hyperthyroidism": { category: "Endocrine", symptoms: ["Weight loss", "Rapid heartbeat", "Nervousness"], severity: "Normal Care Needed" },
+    "Addison's Disease": { category: "Endocrine", symptoms: ["Fatigue", "Weight loss", "Low blood pressure"], severity: "Immediate Action Required" },
+    "Cushing's Syndrome": { category: "Endocrine", symptoms: ["Weight gain", "High blood pressure", "Mood swings"], severity: "Immediate Action Required" },
+    "Pituitary Tumor": { category: "Endocrine", symptoms: ["Headaches", "Vision problems", "Hormonal imbalances"], severity: "Immediate Action Required" },
+    "Glaucoma": { category: "Eye", symptoms: ["Vision loss", "Eye pain", "Headaches"], severity: "Immediate Action Required" },
+    "Cataracts": { category: "Eye", symptoms: ["Blurred vision", "Sensitivity to light", "Difficulty seeing at night"], severity: "Normal Care Needed" },
+    "Macular Degeneration": { category: "Eye", symptoms: ["Blurred vision", "Dark spots", "Difficulty reading"], severity: "Normal Care Needed" },
+    "Conjunctivitis": { category: "Eye", symptoms: ["Redness", "Itching", "Discharge"], severity: "Normal Care Needed" },
+    "Otitis Media": { category: "Ear", symptoms: ["Ear pain", "Hearing loss", "Fever"], severity: "Normal Care Needed" },
+    "Tinnitus": { category: "Ear", symptoms: ["Ringing in ears", "Hearing loss", "Dizziness"], severity: "Normal Care Needed" },
+    "Sinusitis": { category: "Respiratory", symptoms: ["Facial pain", "Nasal congestion", "Headache"], severity: "Normal Care Needed" },
+    "Sleep Apnea": { category: "Respiratory", symptoms: ["Snoring", "Daytime fatigue", "Gasping for air"], severity: "Normal Care Needed" },
+    "Emphysema": { category: "Respiratory", symptoms: ["Shortness of breath", "Coughing", "Wheezing"], severity: "Immediate Action Required" },
+    "Chronic Bronchitis": { category: "Respiratory", symptoms: ["Cough", "Mucus production", "Shortness of breath"], severity: "Immediate Action Required" },
+    "Lung Cancer": { category: "Respiratory", symptoms: ["Cough", "Chest pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Pancreatitis": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Peptic Ulcer": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Nausea"], severity: "Normal Care Needed" },
+    "Diverticulitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Appendicitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Cirrhosis": { category: "Liver", symptoms: ["Jaundice", "Fatigue", "Abdominal swelling"], severity: "Immediate Action Required" },
+    "Hepatitis D": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Hepatitis E": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Rabies": { category: "Infectious", symptoms: ["Fever", "Headache", "Hydrophobia"], severity: "Immediate Action Required" },
+    "Toxoplasmosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Normal Care Needed" },
+    "Leptospirosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Immediate Action Required" },
+    "Schistosomiasis": { category: "Infectious", symptoms: ["Abdominal pain", "Diarrhea", "Blood in urine"], severity: "Immediate Action Required" },
+    "Dengue Hemorrhagic Fever": { category: "Infectious", symptoms: ["High fever", "Bleeding", "Shock"], severity: "Immediate Action Required" },
+    "Yellow Fever": { category: "Infectious", symptoms: ["Fever", "Jaundice", "Bleeding"], severity: "Immediate Action Required" },
+    "Zika Virus": { category: "Infectious", symptoms: ["Fever", "Rash", "Joint pain"], severity: "Normal Care Needed" },
+    "Ebola": { category: "Infectious", symptoms: ["Fever", "Bleeding", "Weakness"], severity: "Immediate Action Required" },
+    "HIV/AIDS": { category: "Infectious", symptoms: ["Fever", "Weight loss", "Fatigue"], severity: "Immediate Action Required" },
+    "Syphilis": { category: "Infectious", symptoms: ["Sores", "Rash", "Fever"], severity: "Immediate Action Required" },
+    "Gonorrhea": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Chlamydia": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Herpes": { category: "Infectious", symptoms: ["Blisters", "Itching", "Pain"], severity: "Normal Care Needed" },
+    "Scabies": { category: "Skin", symptoms: ["Itching", "Rash", "Sores"], severity: "Normal Care Needed" },
+    "Ringworm": { category: "Skin", symptoms: ["Itchy ring-shaped rash", "Redness", "Scaling"], severity: "Normal Care Needed" },
+    "Athlete's Foot": { category: "Skin", symptoms: ["Itching", "Burning", "Cracking skin"], severity: "Normal Care Needed" },
+    "Eczema": { category: "Skin", symptoms: ["Itching", "Redness", "Dry skin"], severity: "Normal Care Needed" },
+    "Acne": { category: "Skin", symptoms: ["Pimples", "Blackheads", "Redness"], severity: "Normal Care Needed" },
+    "Rosacea": { category: "Skin", symptoms: ["Facial redness", "Swelling", "Bumps"], severity: "Normal Care Needed" },
+    "Celiac Disease": { category: "Autoimmune", symptoms: ["Diarrhea", "Bloating", "Weight loss"], severity: "Normal Care Needed" },
+    "Lupus": { category: "Autoimmune", symptoms: ["Fatigue", "Joint pain", "Rash"], severity: "Immediate Action Required" },
+    "Rheumatoid Arthritis": { category: "Autoimmune", symptoms: ["Joint pain", "Swelling", "Stiffness"], severity: "Normal Care Needed" },
+    "Multiple Sclerosis": { category: "Neurological", symptoms: ["Numbness", "Weakness", "Vision problems"], severity: "Immediate Action Required" },
+    "Fibromyalgia": { category: "Chronic", symptoms: ["Widespread pain", "Fatigue", "Sleep problems"], severity: "Normal Care Needed" },
+    "Chronic Fatigue Syndrome": { category: "Chronic", symptoms: ["Extreme fatigue", "Sleep problems", "Memory issues"], severity: "Normal Care Needed" },
+    "Irritable Bowel Syndrome": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Diarrhea"], severity: "Normal Care Needed" },
+    "Crohn's Disease": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Ulcerative Colitis": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Blood in stool"], severity: "Immediate Action Required" },
+    "Gallstones": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Kidney Stones": { category: "Urinary", symptoms: ["Severe pain", "Blood in urine", "Nausea"], severity: "Immediate Action Required" },
+    "Urinary Tract Infection": { category: "Urinary", symptoms: ["Painful urination", "Frequent urination", "Cloudy urine"], severity: "Normal Care Needed" },
+    "Prostatitis": { category: "Urinary", symptoms: ["Pelvic pain", "Painful urination", "Fever"], severity: "Normal Care Needed" },
+    "Endometriosis": { category: "Reproductive", symptoms: ["Pelvic pain", "Painful periods", "Infertility"], severity: "Normal Care Needed" },
+    "Polycystic Ovary Syndrome": { category: "Reproductive", symptoms: ["Irregular periods", "Weight gain", "Acne"], severity: "Normal Care Needed" },
+    "Ovarian Cysts": { category: "Reproductive", symptoms: ["Pelvic pain", "Bloating", "Painful periods"], severity: "Normal Care Needed" },
+    "Menopause": { category: "Reproductive", symptoms: ["Hot flashes", "Mood swings", "Sleep problems"], severity: "Normal Care Needed" },
+    "Erectile Dysfunction": { category: "Reproductive", symptoms: ["Difficulty maintaining erection", "Reduced sexual desire"], severity: "Normal Care Needed" },
+    "Osteoarthritis": { category: "Chronic", symptoms: ["Joint pain", "Stiffness", "Swelling"], severity: "Normal Care Needed" },
+    "Gout": { category: "Chronic", symptoms: ["Joint pain", "Swelling", "Redness"], severity: "Normal Care Needed" },
+    "Anemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Leukemia": { category: "Blood", symptoms: ["Fatigue", "Fever", "Frequent infections"], severity: "Immediate Action Required" },
+    "Lymphoma": { category: "Blood", symptoms: ["Swollen lymph nodes", "Fatigue", "Weight loss"], severity: "Immediate Action Required" },
+    "Hemophilia": { category: "Blood", symptoms: ["Excessive bleeding", "Bruising", "Joint pain"], severity: "Immediate Action Required" },
+    "Thalassemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Sickle Cell Anemia": { category: "Blood", symptoms: ["Pain", "Fatigue", "Swelling in hands and feet"], severity: "Immediate Action Required" },
+    "Thyroid Cancer": { category: "Endocrine", symptoms: ["Lump in neck", "Hoarseness", "Difficulty swallowing"], severity: "Immediate Action Required" },
+    "Hypothyroidism": { category: "Endocrine", symptoms: ["Fatigue", "Weight gain", "Depression"], severity: "Normal Care Needed" },
+    "Hyperthyroidism": { category: "Endocrine", symptoms: ["Weight loss", "Rapid heartbeat", "Nervousness"], severity: "Normal Care Needed" },
+    "Addison's Disease": { category: "Endocrine", symptoms: ["Fatigue", "Weight loss", "Low blood pressure"], severity: "Immediate Action Required" },
+    "Cushing's Syndrome": { category: "Endocrine", symptoms: ["Weight gain", "High blood pressure", "Mood swings"], severity: "Immediate Action Required" },
+    "Pituitary Tumor": { category: "Endocrine", symptoms: ["Headaches", "Vision problems", "Hormonal imbalances"], severity: "Immediate Action Required" },
+    "Glaucoma": { category: "Eye", symptoms: ["Vision loss", "Eye pain", "Headaches"], severity: "Immediate Action Required" },
+    "Cataracts": { category: "Eye", symptoms: ["Blurred vision", "Sensitivity to light", "Difficulty seeing at night"], severity: "Normal Care Needed" },
+    "Macular Degeneration": { category: "Eye", symptoms: ["Blurred vision", "Dark spots", "Difficulty reading"], severity: "Normal Care Needed" },
+    "Conjunctivitis": { category: "Eye", symptoms: ["Redness", "Itching", "Discharge"], severity: "Normal Care Needed" },
+    "Otitis Media": { category: "Ear", symptoms: ["Ear pain", "Hearing loss", "Fever"], severity: "Normal Care Needed" },
+    "Tinnitus": { category: "Ear", symptoms: ["Ringing in ears", "Hearing loss", "Dizziness"], severity: "Normal Care Needed" },
+    "Sinusitis": { category: "Respiratory", symptoms: ["Facial pain", "Nasal congestion", "Headache"], severity: "Normal Care Needed" },
+    "Sleep Apnea": { category: "Respiratory", symptoms: ["Snoring", "Daytime fatigue", "Gasping for air"], severity: "Normal Care Needed" },
+    "Emphysema": { category: "Respiratory", symptoms: ["Shortness of breath", "Coughing", "Wheezing"], severity: "Immediate Action Required" },
+    "Chronic Bronchitis": { category: "Respiratory", symptoms: ["Cough", "Mucus production", "Shortness of breath"], severity: "Immediate Action Required" },
+    "Lung Cancer": { category: "Respiratory", symptoms: ["Cough", "Chest pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Pancreatitis": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Peptic Ulcer": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Nausea"], severity: "Normal Care Needed" },
+    "Diverticulitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Appendicitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Cirrhosis": { category: "Liver", symptoms: ["Jaundice", "Fatigue", "Abdominal swelling"], severity: "Immediate Action Required" },
+    "Hepatitis D": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Hepatitis E": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Rabies": { category: "Infectious", symptoms: ["Fever", "Headache", "Hydrophobia"], severity: "Immediate Action Required" },
+    "Toxoplasmosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Normal Care Needed" },
+    "Leptospirosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Immediate Action Required" },
+    "Schistosomiasis": { category: "Infectious", symptoms: ["Abdominal pain", "Diarrhea", "Blood in urine"], severity: "Immediate Action Required" },
+    "Dengue Hemorrhagic Fever": { category: "Infectious", symptoms: ["High fever", "Bleeding", "Shock"], severity: "Immediate Action Required" },
+    "Yellow Fever": { category: "Infectious", symptoms: ["Fever", "Jaundice", "Bleeding"], severity: "Immediate Action Required" },
+    "Zika Virus": { category: "Infectious", symptoms: ["Fever", "Rash", "Joint pain"], severity: "Normal Care Needed" },
+    "Ebola": { category: "Infectious", symptoms: ["Fever", "Bleeding", "Weakness"], severity: "Immediate Action Required" },
+    "HIV/AIDS": { category: "Infectious", symptoms: ["Fever", "Weight loss", "Fatigue"], severity: "Immediate Action Required" },
+    "Syphilis": { category: "Infectious", symptoms: ["Sores", "Rash", "Fever"], severity: "Immediate Action Required" },
+    "Gonorrhea": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Chlamydia": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Herpes": { category: "Infectious", symptoms: ["Blisters", "Itching", "Pain"], severity: "Normal Care Needed" },
+    "Scabies": { category: "Skin", symptoms: ["Itching", "Rash", "Sores"], severity: "Normal Care Needed" },
+    "Ringworm": { category: "Skin", symptoms: ["Itchy ring-shaped rash", "Redness", "Scaling"], severity: "Normal Care Needed" },
+    "Athlete's Foot": { category: "Skin", symptoms: ["Itching", "Burning", "Cracking skin"], severity: "Normal Care Needed" },
+    "Eczema": { category: "Skin", symptoms: ["Itching", "Redness", "Dry skin"], severity: "Normal Care Needed" },
+    "Acne": { category: "Skin", symptoms: ["Pimples", "Blackheads", "Redness"], severity: "Normal Care Needed" },
+    "Rosacea": { category: "Skin", symptoms: ["Facial redness", "Swelling", "Bumps"], severity: "Normal Care Needed" },
+    "Celiac Disease": { category: "Autoimmune", symptoms: ["Diarrhea", "Bloating", "Weight loss"], severity: "Normal Care Needed" },
+    "Lupus": { category: "Autoimmune", symptoms: ["Fatigue", "Joint pain", "Rash"], severity: "Immediate Action Required" },
+    "Rheumatoid Arthritis": { category: "Autoimmune", symptoms: ["Joint pain", "Swelling", "Stiffness"], severity: "Normal Care Needed" },
+    "Multiple Sclerosis": { category: "Neurological", symptoms: ["Numbness", "Weakness", "Vision problems"], severity: "Immediate Action Required" },
+    "Fibromyalgia": { category: "Chronic", symptoms: ["Widespread pain", "Fatigue", "Sleep problems"], severity: "Normal Care Needed" },
+    "Chronic Fatigue Syndrome": { category: "Chronic", symptoms: ["Extreme fatigue", "Sleep problems", "Memory issues"], severity: "Normal Care Needed" },
+    "Irritable Bowel Syndrome": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Diarrhea"], severity: "Normal Care Needed" },
+    "Crohn's Disease": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Ulcerative Colitis": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Blood in stool"], severity: "Immediate Action Required" },
+    "Gallstones": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Kidney Stones": { category: "Urinary", symptoms: ["Severe pain", "Blood in urine", "Nausea"], severity: "Immediate Action Required" },
+    "Urinary Tract Infection": { category: "Urinary", symptoms: ["Painful urination", "Frequent urination", "Cloudy urine"], severity: "Normal Care Needed" },
+    "Prostatitis": { category: "Urinary", symptoms: ["Pelvic pain", "Painful urination", "Fever"], severity: "Normal Care Needed" },
+    "Endometriosis": { category: "Reproductive", symptoms: ["Pelvic pain", "Painful periods", "Infertility"], severity: "Normal Care Needed" },
+    "Polycystic Ovary Syndrome": { category: "Reproductive", symptoms: ["Irregular periods", "Weight gain", "Acne"], severity: "Normal Care Needed" },
+    "Ovarian Cysts": { category: "Reproductive", symptoms: ["Pelvic pain", "Bloating", "Painful periods"], severity: "Normal Care Needed" },
+    "Menopause": { category: "Reproductive", symptoms: ["Hot flashes", "Mood swings", "Sleep problems"], severity: "Normal Care Needed" },
+    "Erectile Dysfunction": { category: "Reproductive", symptoms: ["Difficulty maintaining erection", "Reduced sexual desire"], severity: "Normal Care Needed" },
+    "Osteoarthritis": { category: "Chronic", symptoms: ["Joint pain", "Stiffness", "Swelling"], severity: "Normal Care Needed" },
+    "Gout": { category: "Chronic", symptoms: ["Joint pain", "Swelling", "Redness"], severity: "Normal Care Needed" },
+    "Anemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Leukemia": { category: "Blood", symptoms: ["Fatigue", "Fever", "Frequent infections"], severity: "Immediate Action Required" },
+    "Lymphoma": { category: "Blood", symptoms: ["Swollen lymph nodes", "Fatigue", "Weight loss"], severity: "Immediate Action Required" },
+    "Hemophilia": { category: "Blood", symptoms: ["Excessive bleeding", "Bruising", "Joint pain"], severity: "Immediate Action Required" },
+    "Thalassemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Sickle Cell Anemia": { category: "Blood", symptoms: ["Pain", "Fatigue", "Swelling in hands and feet"], severity: "Immediate Action Required" },
+    "Thyroid Cancer": { category: "Endocrine", symptoms: ["Lump in neck", "Hoarseness", "Difficulty swallowing"], severity: "Immediate Action Required" },
+    "Hypothyroidism": { category: "Endocrine", symptoms: ["Fatigue", "Weight gain", "Depression"], severity: "Normal Care Needed" },
+    "Hyperthyroidism": { category: "Endocrine", symptoms: ["Weight loss", "Rapid heartbeat", "Nervousness"], severity: "Normal Care Needed" },
+    "Addison's Disease": { category: "Endocrine", symptoms: ["Fatigue", "Weight loss", "Low blood pressure"], severity: "Immediate Action Required" },
+    "Cushing's Syndrome": { category: "Endocrine", symptoms: ["Weight gain", "High blood pressure", "Mood swings"], severity: "Immediate Action Required" },
+    "Pituitary Tumor": { category: "Endocrine", symptoms: ["Headaches", "Vision problems", "Hormonal imbalances"], severity: "Immediate Action Required" },
+    "Glaucoma": { category: "Eye", symptoms: ["Vision loss", "Eye pain", "Headaches"], severity: "Immediate Action Required" },
+    "Cataracts": { category: "Eye", symptoms: ["Blurred vision", "Sensitivity to light", "Difficulty seeing at night"], severity: "Normal Care Needed" },
+    "Macular Degeneration": { category: "Eye", symptoms: ["Blurred vision", "Dark spots", "Difficulty reading"], severity: "Normal Care Needed" },
+    "Conjunctivitis": { category: "Eye", symptoms: ["Redness", "Itching", "Discharge"], severity: "Normal Care Needed" },
+    "Otitis Media": { category: "Ear", symptoms: ["Ear pain", "Hearing loss", "Fever"], severity: "Normal Care Needed" },
+    "Tinnitus": { category: "Ear", symptoms: ["Ringing in ears", "Hearing loss", "Dizziness"], severity: "Normal Care Needed" },
+    "Sinusitis": { category: "Respiratory", symptoms: ["Facial pain", "Nasal congestion", "Headache"], severity: "Normal Care Needed" },
+    "Sleep Apnea": { category: "Respiratory", symptoms: ["Snoring", "Daytime fatigue", "Gasping for air"], severity: "Normal Care Needed" },
+    "Emphysema": { category: "Respiratory", symptoms: ["Shortness of breath", "Coughing", "Wheezing"], severity: "Immediate Action Required" },
+    "Chronic Bronchitis": { category: "Respiratory", symptoms: ["Cough", "Mucus production", "Shortness of breath"], severity: "Immediate Action Required" },
+    "Lung Cancer": { category: "Respiratory", symptoms: ["Cough", "Chest pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Pancreatitis": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Peptic Ulcer": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Nausea"], severity: "Normal Care Needed" },
+    "Diverticulitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Appendicitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Cirrhosis": { category: "Liver", symptoms: ["Jaundice", "Fatigue", "Abdominal swelling"], severity: "Immediate Action Required" },
+    "Hepatitis D": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Hepatitis E": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Rabies": { category: "Infectious", symptoms: ["Fever", "Headache", "Hydrophobia"], severity: "Immediate Action Required" },
+    "Toxoplasmosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Normal Care Needed" },
+    "Leptospirosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Immediate Action Required" },
+    "Schistosomiasis": { category: "Infectious", symptoms: ["Abdominal pain", "Diarrhea", "Blood in urine"], severity: "Immediate Action Required" },
+    "Dengue Hemorrhagic Fever": { category: "Infectious", symptoms: ["High fever", "Bleeding", "Shock"], severity: "Immediate Action Required" },
+    "Yellow Fever": { category: "Infectious", symptoms: ["Fever", "Jaundice", "Bleeding"], severity: "Immediate Action Required" },
+    "Zika Virus": { category: "Infectious", symptoms: ["Fever", "Rash", "Joint pain"], severity: "Normal Care Needed" },
+    "Ebola": { category: "Infectious", symptoms: ["Fever", "Bleeding", "Weakness"], severity: "Immediate Action Required" },
+    "HIV/AIDS": { category: "Infectious", symptoms: ["Fever", "Weight loss", "Fatigue"], severity: "Immediate Action Required" },
+    "Syphilis": { category: "Infectious", symptoms: ["Sores", "Rash", "Fever"], severity: "Immediate Action Required" },
+    "Gonorrhea": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Chlamydia": { category: "Infectious", symptoms: ["Painful urination", "Discharge", "Pelvic pain"], severity: "Immediate Action Required" },
+    "Herpes": { category: "Infectious", symptoms: ["Blisters", "Itching", "Pain"], severity: "Normal Care Needed" },
+    "Scabies": { category: "Skin", symptoms: ["Itching", "Rash", "Sores"], severity: "Normal Care Needed" },
+    "Ringworm": { category: "Skin", symptoms: ["Itchy ring-shaped rash", "Redness", "Scaling"], severity: "Normal Care Needed" },
+    "Athlete's Foot": { category: "Skin", symptoms: ["Itching", "Burning", "Cracking skin"], severity: "Normal Care Needed" },
+    "Eczema": { category: "Skin", symptoms: ["Itching", "Redness", "Dry skin"], severity: "Normal Care Needed" },
+    "Acne": { category: "Skin", symptoms: ["Pimples", "Blackheads", "Redness"], severity: "Normal Care Needed" },
+    "Rosacea": { category: "Skin", symptoms: ["Facial redness", "Swelling", "Bumps"], severity: "Normal Care Needed" },
+    "Celiac Disease": { category: "Autoimmune", symptoms: ["Diarrhea", "Bloating", "Weight loss"], severity: "Normal Care Needed" },
+    "Lupus": { category: "Autoimmune", symptoms: ["Fatigue", "Joint pain", "Rash"], severity: "Immediate Action Required" },
+    "Rheumatoid Arthritis": { category: "Autoimmune", symptoms: ["Joint pain", "Swelling", "Stiffness"], severity: "Normal Care Needed" },
+    "Multiple Sclerosis": { category: "Neurological", symptoms: ["Numbness", "Weakness", "Vision problems"], severity: "Immediate Action Required" },
+    "Fibromyalgia": { category: "Chronic", symptoms: ["Widespread pain", "Fatigue", "Sleep problems"], severity: "Normal Care Needed" },
+    "Chronic Fatigue Syndrome": { category: "Chronic", symptoms: ["Extreme fatigue", "Sleep problems", "Memory issues"], severity: "Normal Care Needed" },
+    "Irritable Bowel Syndrome": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Diarrhea"], severity: "Normal Care Needed" },
+    "Crohn's Disease": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Ulcerative Colitis": { category: "Digestive", symptoms: ["Diarrhea", "Abdominal pain", "Blood in stool"], severity: "Immediate Action Required" },
+    "Gallstones": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Kidney Stones": { category: "Urinary", symptoms: ["Severe pain", "Blood in urine", "Nausea"], severity: "Immediate Action Required" },
+    "Urinary Tract Infection": { category: "Urinary", symptoms: ["Painful urination", "Frequent urination", "Cloudy urine"], severity: "Normal Care Needed" },
+    "Prostatitis": { category: "Urinary", symptoms: ["Pelvic pain", "Painful urination", "Fever"], severity: "Normal Care Needed" },
+    "Endometriosis": { category: "Reproductive", symptoms: ["Pelvic pain", "Painful periods", "Infertility"], severity: "Normal Care Needed" },
+    "Polycystic Ovary Syndrome": { category: "Reproductive", symptoms: ["Irregular periods", "Weight gain", "Acne"], severity: "Normal Care Needed" },
+    "Ovarian Cysts": { category: "Reproductive", symptoms: ["Pelvic pain", "Bloating", "Painful periods"], severity: "Normal Care Needed" },
+    "Menopause": { category: "Reproductive", symptoms: ["Hot flashes", "Mood swings", "Sleep problems"], severity: "Normal Care Needed" },
+    "Erectile Dysfunction": { category: "Reproductive", symptoms: ["Difficulty maintaining erection", "Reduced sexual desire"], severity: "Normal Care Needed" },
+    "Osteoarthritis": { category: "Chronic", symptoms: ["Joint pain", "Stiffness", "Swelling"], severity: "Normal Care Needed" },
+    "Gout": { category: "Chronic", symptoms: ["Joint pain", "Swelling", "Redness"], severity: "Normal Care Needed" },
+    "Anemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Leukemia": { category: "Blood", symptoms: ["Fatigue", "Fever", "Frequent infections"], severity: "Immediate Action Required" },
+    "Lymphoma": { category: "Blood", symptoms: ["Swollen lymph nodes", "Fatigue", "Weight loss"], severity: "Immediate Action Required" },
+    "Hemophilia": { category: "Blood", symptoms: ["Excessive bleeding", "Bruising", "Joint pain"], severity: "Immediate Action Required" },
+    "Thalassemia": { category: "Blood", symptoms: ["Fatigue", "Weakness", "Pale skin"], severity: "Normal Care Needed" },
+    "Sickle Cell Anemia": { category: "Blood", symptoms: ["Pain", "Fatigue", "Swelling in hands and feet"], severity: "Immediate Action Required" },
+    "Thyroid Cancer": { category: "Endocrine", symptoms: ["Lump in neck", "Hoarseness", "Difficulty swallowing"], severity: "Immediate Action Required" },
+    "Hypothyroidism": { category: "Endocrine", symptoms: ["Fatigue", "Weight gain", "Depression"], severity: "Normal Care Needed" },
+    "Hyperthyroidism": { category: "Endocrine", symptoms: ["Weight loss", "Rapid heartbeat", "Nervousness"], severity: "Normal Care Needed" },
+    "Addison's Disease": { category: "Endocrine", symptoms: ["Fatigue", "Weight loss", "Low blood pressure"], severity: "Immediate Action Required" },
+    "Cushing's Syndrome": { category: "Endocrine", symptoms: ["Weight gain", "High blood pressure", "Mood swings"], severity: "Immediate Action Required" },
+    "Pituitary Tumor": { category: "Endocrine", symptoms: ["Headaches", "Vision problems", "Hormonal imbalances"], severity: "Immediate Action Required" },
+    "Glaucoma": { category: "Eye", symptoms: ["Vision loss", "Eye pain", "Headaches"], severity: "Immediate Action Required" },
+    "Cataracts": { category: "Eye", symptoms: ["Blurred vision", "Sensitivity to light", "Difficulty seeing at night"], severity: "Normal Care Needed" },
+    "Macular Degeneration": { category: "Eye", symptoms: ["Blurred vision", "Dark spots", "Difficulty reading"], severity: "Normal Care Needed" },
+    "Conjunctivitis": { category: "Eye", symptoms: ["Redness", "Itching", "Discharge"], severity: "Normal Care Needed" },
+    "Otitis Media": { category: "Ear", symptoms: ["Ear pain", "Hearing loss", "Fever"], severity: "Normal Care Needed" },
+    "Tinnitus": { category: "Ear", symptoms: ["Ringing in ears", "Hearing loss", "Dizziness"], severity: "Normal Care Needed" },
+    "Sinusitis": { category: "Respiratory", symptoms: ["Facial pain", "Nasal congestion", "Headache"], severity: "Normal Care Needed" },
+    "Sleep Apnea": { category: "Respiratory", symptoms: ["Snoring", "Daytime fatigue", "Gasping for air"], severity: "Normal Care Needed" },
+    "Emphysema": { category: "Respiratory", symptoms: ["Shortness of breath", "Coughing", "Wheezing"], severity: "Immediate Action Required" },
+    "Chronic Bronchitis": { category: "Respiratory", symptoms: ["Cough", "Mucus production", "Shortness of breath"], severity: "Immediate Action Required" },
+    "Lung Cancer": { category: "Respiratory", symptoms: ["Cough", "Chest pain", "Weight loss"], severity: "Immediate Action Required" },
+    "Pancreatitis": { category: "Digestive", symptoms: ["Abdominal pain", "Nausea", "Vomiting"], severity: "Immediate Action Required" },
+    "Peptic Ulcer": { category: "Digestive", symptoms: ["Abdominal pain", "Bloating", "Nausea"], severity: "Normal Care Needed" },
+    "Diverticulitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Appendicitis": { category: "Digestive", symptoms: ["Abdominal pain", "Fever", "Nausea"], severity: "Immediate Action Required" },
+    "Cirrhosis": { category: "Liver", symptoms: ["Jaundice", "Fatigue", "Abdominal swelling"], severity: "Immediate Action Required" },
+    "Hepatitis D": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Hepatitis E": { category: "Infectious", symptoms: ["Jaundice", "Fatigue", "Abdominal pain"], severity: "Immediate Action Required" },
+    "Rabies": { category: "Infectious", symptoms: ["Fever", "Headache", "Hydrophobia"], severity: "Immediate Action Required" },
+    "Toxoplasmosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Normal Care Needed" },
+    "Leptospirosis": { category: "Infectious", symptoms: ["Fever", "Headache", "Muscle pain"], severity: "Immediate Action Required" },
+    "Schistosomiasis": { category: "Infectious", symptoms: ["Abdominal pain", "Diarrhea", "Blood in urine"], severity: "Immediate Action Required" },
+    "Dengue Hemorrhagic Fever": { category: "Infectious", symptoms: ["High fever", "Bleeding", "Shock"], severity: "Immediate Action Required" },
+    "Yellow Fever": { category: "Infectious", symptoms: ["Fever", "Jaundice", "Bleeding"], severity: "Immediate Action Required" },
+    "Zika Virus": { category: "Infectious", symptoms: ["Fever", "Rash", "Joint pain"], severity: "Normal Care Needed" },
+    "Ebola": { category: "Infectious", symptoms: ["Fever", "Bleeding", "Weakness"], severity: "Immediate Action Required" },
+        };
+
+        function identifyDisease() {
+            let query = document.getElementById("diseaseInput").value.trim();
+            let resultContainer = document.getElementById("results");
+
+            if (!query) {
+                resultContainer.innerHTML = "⚠ Please enter a disease name.";
+                return;
+            }
+
+            // Convert query to lowercase for case-insensitive comparison
+            query = query.toLowerCase();
+
+            // Find the disease in the database (case-insensitive)
+            let foundDisease = Object.keys(diseaseData).find(
+                (disease) => disease.toLowerCase() === query
+            );
+
+            if (foundDisease) {
+                let disease = diseaseData[foundDisease];
+                let severityClass = disease.severity.includes("Immediate") ? "immediate-action" : "normal-care";
+
+                resultContainer.innerHTML = `
+                    <strong>🔍 Disease:</strong> <span style="color:#00ffcc">${foundDisease}</span> <br>
+                    <strong>🩺 Category:</strong> ${disease.category} <br>
+                    <strong>⚠ Symptoms:</strong> ${disease.symptoms.join(", ")} <br>
+                    <strong class="${severityClass}">🚨 Severity: ${disease.severity}</strong>
+                `;
+            } else {
+                resultContainer.innerHTML = "❌ Disease not found in the database.";
+            }
+        }
+    </script>
+
+</body>
+</html>
